@@ -13,4 +13,5 @@ dependencies = [
     "pytest>=8.4.2",
     "python-dotenv>=1.1.1",
     "uvicorn>=0.37.0",
+    "pytest-asyncio>=1.2.0",
 ]
