@@ -12,10 +12,11 @@ Preferred communication style: Simple, everyday language.
 
 ### Core Technology Stack
 - **Backend Framework**: FastAPI (Python) with async/await for high-performance API endpoints
-- **Database Strategy**: Dual-mode storage system
-  - Primary: MongoDB with Motor async driver for production scalability
-  - Fallback: In-memory collections for development/testing without external dependencies
-  - Rationale: Allows rapid development and testing while maintaining production-ready MongoDB integration
+- **Database**: Firebase Firestore
+  - NoSQL document database with real-time capabilities
+  - Google Cloud infrastructure for scalability and reliability
+  - firebase-admin SDK for Python integration
+  - Service account authentication
 - **API Documentation**: Auto-generated OpenAPI/Swagger docs via FastAPI
 - **CORS**: Configured for `http://localhost:3000` frontend integration
 
@@ -59,32 +60,42 @@ Preferred communication style: Simple, everyday language.
 - **AI Integration Routes**: Endpoints for AI agents to interact with system
 
 ### Database Schema Design
-- **Collections**:
+- **Collections** (Firestore):
   - `questions`: Question bank with metadata (subject, topic, difficulty)
   - `sessions`: Active and historical assessment sessions
   - `attempts`: Question attempt history linked to sessions
   - `user_skills`: Mastery tracking per user/topic/subject
-- **ID Strategy**: String-based IDs with auto-increment for in-memory, MongoDB ObjectIds for production
+- **ID Strategy**: Firestore auto-generated document IDs or custom string IDs
 
 ### Configuration Management
 - **Environment-based Settings**: Pydantic Settings for type-safe configuration
 - **Key Configurations**:
-  - MongoDB connection URL (optional, triggers in-memory mode if absent)
+  - Firebase service account credentials (JSON file path)
   - API keys for authentication
   - CORS origins for frontend integration
-  - Database name and application metadata
+  - Application metadata
+
+### Analytics & Reporting
+- **Power BI Integration**: Dedicated endpoint (`/api/powerbi/analytics`) providing:
+  - Overall performance metrics (total sessions, attempts, accuracy)
+  - Subject-level performance analysis
+  - Topic-wise mastery scores and learner distribution
+  - Difficulty-based success rates
+  - Time-series data for temporal analysis
+  - Aggregated data ready for Power BI dashboard consumption
 
 ## External Dependencies
 
 ### Required Services
-- **MongoDB** (Optional): Document database for persistent storage
-  - Connection via motor async driver
-  - Falls back to in-memory if unavailable
+- **Firebase Firestore**: NoSQL cloud database
+  - Requires Firebase project setup
+  - Service account credentials for authentication
   - Collections: questions, sessions, attempts, user_skills
+  - Real-time data synchronization capabilities
 
 ### Python Packages
 - **FastAPI**: Web framework for building APIs
-- **Motor**: Async MongoDB driver for FastAPI integration
+- **firebase-admin**: Official Firebase Admin SDK for Python
 - **Pydantic**: Data validation and settings management
 - **Pydantic-settings**: Environment variable configuration
 - **Uvicorn**: ASGI server for running FastAPI

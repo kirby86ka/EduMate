@@ -354,7 +354,7 @@ async def seed_questions():
     result = await questions_collection.insert_many(all_questions)
     
     print(f"Successfully seeded {len(result.inserted_ids)} questions!")
-    print(f"Database mode: {'In-memory' if db_manager.is_using_memory() else 'MongoDB'}")
+    print(f"Database: Firebase Firestore")
     print(f"\nBreakdown:")
     print(f"  Python: {len(python_questions)} questions")
     print(f"  JavaScript: {len(javascript_questions)} questions")

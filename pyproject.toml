@@ -6,12 +6,11 @@ requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.118.0",
     "httpx>=0.28.1",
-    "motor>=3.7.1",
     "pydantic-settings>=2.11.0",
     "pydantic>=2.11.9",
-    "pymongo>=4.15.2",
     "pytest>=8.4.2",
     "python-dotenv>=1.1.1",
     "uvicorn>=0.37.0",
     "pytest-asyncio>=1.2.0",
+    "firebase-admin>=7.1.0",
 ]

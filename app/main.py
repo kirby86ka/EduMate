@@ -46,7 +46,7 @@ async def root():
     return {
         "message": "Adaptive Learning API",
         "version": settings.app_version,
-        "database": "in-memory" if db_manager.is_using_memory() else "MongoDB"
+        "database": "Firebase Firestore"
     }
 
 
@@ -54,7 +54,7 @@ async def root():
 async def health_check():
     return {
         "status": "healthy",
-        "database": "in-memory" if db_manager.is_using_memory() else "MongoDB"
+        "database": "Firebase Firestore"
     }
 
 
@@ -410,6 +410,125 @@ async def ai_ingest_endpoint(data: dict):
         "success": True,
         "message": "AI ingest endpoint - ready for ML model integration",
         "received_data": data
+    }
+
+
+@app.get("/api/powerbi/analytics", tags=["Power BI"], dependencies=[Depends(verify_admin_key)])
+async def get_powerbi_analytics():
+    """
+    Comprehensive analytics endpoint for Power BI dashboard integration.
+    Returns aggregated data including sessions, attempts, performance metrics, and mastery scores.
+    """
+    sessions_collection = db_manager.get_collection("sessions")
+    attempts_collection = db_manager.get_collection("attempts")
+    skills_collection = db_manager.get_collection("user_skills")
+    questions_collection = db_manager.get_collection("questions")
+    
+    all_sessions = await sessions_collection.find({}).to_list(length=None)
+    all_attempts = await attempts_collection.find({}).to_list(length=None)
+    all_skills = await skills_collection.find({}).to_list(length=None)
+    all_questions = await questions_collection.find({}).to_list(length=None)
+    
+    overall_metrics = {
+        "total_sessions": len(all_sessions),
+        "total_attempts": len(all_attempts),
+        "total_questions": len(all_questions),
+        "total_users": len(set(s.get("user_id") for s in all_sessions if s.get("user_id"))),
+        "completed_sessions": len([s for s in all_sessions if not s.get("is_active", True)]),
+        "active_sessions": len([s for s in all_sessions if s.get("is_active", True)]),
+    }
+    
+    correct_attempts = [a for a in all_attempts if a.get("is_correct", False)]
+    overall_metrics["overall_accuracy"] = (len(correct_attempts) / len(all_attempts) * 100) if all_attempts else 0
+    
+    subject_performance = {}
+    for session in all_sessions:
+        subject = session.get("subject", "Unknown")
+        if subject not in subject_performance:
+            subject_performance[subject] = {
+                "subject": subject,
+                "total_sessions": 0,
+                "total_attempts": 0,
+                "correct_attempts": 0,
+                "accuracy": 0.0,
+                "avg_mastery": 0.0
+            }
+        
+        subject_performance[subject]["total_sessions"] += 1
+        session_attempts = [a for a in all_attempts if a.get("session_id") == session.get("session_id")]
+        subject_performance[subject]["total_attempts"] += len(session_attempts)
+        subject_performance[subject]["correct_attempts"] += len([a for a in session_attempts if a.get("is_correct", False)])
+    
+    for subject, data in subject_performance.items():
+        if data["total_attempts"] > 0:
+            data["accuracy"] = (data["correct_attempts"] / data["total_attempts"] * 100)
+        
+        subject_skills = [s for s in all_skills if s.get("subject") == subject]
+        if subject_skills:
+            data["avg_mastery"] = sum(s.get("mastery_probability", 0) for s in subject_skills) / len(subject_skills)
+    
+    topic_performance = {}
+    for skill in all_skills:
+        topic = skill.get("topic", "Unknown")
+        if topic not in topic_performance:
+            topic_performance[topic] = {
+                "topic": topic,
+                "subject": skill.get("subject", "Unknown"),
+                "total_learners": 0,
+                "avg_mastery": 0.0,
+                "total_attempts": 0,
+                "correct_attempts": 0,
+                "accuracy": 0.0
+            }
+        
+        topic_performance[topic]["total_learners"] += 1
+        topic_performance[topic]["avg_mastery"] += skill.get("mastery_probability", 0)
+        topic_performance[topic]["total_attempts"] += skill.get("attempts_count", 0)
+        topic_performance[topic]["correct_attempts"] += skill.get("correct_count", 0)
+    
+    for topic, data in topic_performance.items():
+        if data["total_learners"] > 0:
+            data["avg_mastery"] = data["avg_mastery"] / data["total_learners"]
+        if data["total_attempts"] > 0:
+            data["accuracy"] = (data["correct_attempts"] / data["total_attempts"] * 100)
+    
+    difficulty_distribution = {
+        "easy": {"total": 0, "correct": 0, "accuracy": 0.0},
+        "medium": {"total": 0, "correct": 0, "accuracy": 0.0},
+        "hard": {"total": 0, "correct": 0, "accuracy": 0.0}
+    }
+    
+    for attempt in all_attempts:
+        difficulty = attempt.get("difficulty", "medium")
+        if difficulty in difficulty_distribution:
+            difficulty_distribution[difficulty]["total"] += 1
+            if attempt.get("is_correct", False):
+                difficulty_distribution[difficulty]["correct"] += 1
+    
+    for diff, data in difficulty_distribution.items():
+        if data["total"] > 0:
+            data["accuracy"] = (data["correct"] / data["total"] * 100)
+    
+    time_series_data = []
+    for attempt in all_attempts:
+        time_series_data.append({
+            "timestamp": attempt.get("answered_at"),
+            "session_id": attempt.get("session_id"),
+            "is_correct": attempt.get("is_correct", False),
+            "difficulty": attempt.get("difficulty"),
+            "topic": attempt.get("topic"),
+            "time_taken_seconds": attempt.get("time_taken_seconds")
+        })
+    
+    return {
+        "overview": overall_metrics,
+        "subject_performance": list(subject_performance.values()),
+        "topic_performance": list(topic_performance.values()),
+        "difficulty_distribution": [
+            {"difficulty": k, **v} for k, v in difficulty_distribution.items()
+        ],
+        "time_series_data": time_series_data,
+        "generated_at": datetime.utcnow().isoformat()
     }
 
 
