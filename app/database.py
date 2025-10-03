@@ -1,158 +1,187 @@
-from motor.motor_asyncio import AsyncIOMotorClient
+import firebase_admin
+from firebase_admin import credentials, firestore
 from typing import Optional, Dict, List, Any
 import logging
 from app.config import settings
+import os
 
 logger = logging.getLogger(__name__)
 
 
-class InMemoryDatabase:
-    def __init__(self):
-        self.collections: Dict[str, List[Dict[str, Any]]] = {
-            "questions": [],
-            "sessions": [],
-            "attempts": [],
-            "user_skills": []
-        }
-        self.id_counters: Dict[str, int] = {
-            "questions": 1,
-            "sessions": 1,
-            "attempts": 1,
-            "user_skills": 1
-        }
+class FirestoreCollection:
+    """Wrapper class for Firestore collection operations with MongoDB-like API"""
     
-    def get_collection(self, name: str):
-        if name not in self.collections:
-            self.collections[name] = []
-            self.id_counters[name] = 1
-        return InMemoryCollection(name, self.collections, self.id_counters)
-
-
-class InMemoryCollection:
-    def __init__(self, name: str, collections: Dict, id_counters: Dict):
-        self.name = name
-        self.collections = collections
-        self.id_counters = id_counters
+    def __init__(self, collection_ref):
+        self.collection_ref = collection_ref
     
     async def insert_one(self, document: Dict[str, Any]):
-        if "_id" not in document:
-            document["_id"] = str(self.id_counters[self.name])
-            self.id_counters[self.name] += 1
-        self.collections[self.name].append(document.copy())
-        return type('InsertResult', (), {'inserted_id': document["_id"]})()
+        """Insert a single document"""
+        if "_id" in document:
+            doc_id = str(document["_id"])
+            del document["_id"]
+            doc_ref = self.collection_ref.document(doc_id)
+            doc_ref.set(document)
+            return type('InsertResult', (), {'inserted_id': doc_id})()
+        else:
+            doc_ref = self.collection_ref.add(document)
+            return type('InsertResult', (), {'inserted_id': doc_ref[1].id})()
     
     async def insert_many(self, documents: List[Dict[str, Any]]):
+        """Insert multiple documents"""
         inserted_ids = []
         for doc in documents:
-            if "_id" not in doc:
-                doc["_id"] = str(self.id_counters[self.name])
-                self.id_counters[self.name] += 1
-            self.collections[self.name].append(doc.copy())
-            inserted_ids.append(doc["_id"])
+            result = await self.insert_one(doc.copy())
+            inserted_ids.append(result.inserted_id)
         return type('InsertManyResult', (), {'inserted_ids': inserted_ids})()
     
     async def find_one(self, filter_dict: Dict[str, Any]):
-        for doc in self.collections[self.name]:
-            if self._match_filter(doc, filter_dict):
-                return doc.copy()
+        """Find a single document matching filter"""
+        if not filter_dict:
+            docs = self.collection_ref.limit(1).stream()
+            for doc in docs:
+                return {"_id": doc.id, **doc.to_dict()}
+            return None
+        
+        if "_id" in filter_dict:
+            doc = self.collection_ref.document(str(filter_dict["_id"])).get()
+            if doc.exists:
+                return {"_id": doc.id, **doc.to_dict()}
+            return None
+        
+        query = self.collection_ref
+        for key, value in filter_dict.items():
+            query = query.where(key, '==', value)
+        
+        docs = query.limit(1).stream()
+        for doc in docs:
+            return {"_id": doc.id, **doc.to_dict()}
         return None
     
     def find(self, filter_dict: Optional[Dict[str, Any]] = None):
-        filter_dict = filter_dict or {}
-        return InMemoryCursor(self.collections[self.name], filter_dict)
+        """Find documents matching filter"""
+        return FirestoreCursor(self.collection_ref, filter_dict or {})
     
     async def update_one(self, filter_dict: Dict[str, Any], update: Dict[str, Any]):
-        for i, doc in enumerate(self.collections[self.name]):
-            if self._match_filter(doc, filter_dict):
-                if "$set" in update:
-                    doc.update(update["$set"])
-                if "$inc" in update:
-                    for key, value in update["$inc"].items():
-                        doc[key] = doc.get(key, 0) + value
-                return type('UpdateResult', (), {'modified_count': 1})()
+        """Update a single document"""
+        doc_data = await self.find_one(filter_dict)
+        if not doc_data:
+            return type('UpdateResult', (), {'modified_count': 0})()
+        
+        doc_id = doc_data["_id"]
+        doc_ref = self.collection_ref.document(doc_id)
+        
+        update_data = {}
+        if "$set" in update:
+            update_data.update(update["$set"])
+        
+        if "$inc" in update:
+            current_data = doc_ref.get().to_dict() or {}
+            for key, value in update["$inc"].items():
+                update_data[key] = current_data.get(key, 0) + value
+        
+        if update_data:
+            doc_ref.update(update_data)
+            return type('UpdateResult', (), {'modified_count': 1})()
         return type('UpdateResult', (), {'modified_count': 0})()
     
     async def delete_many(self, filter_dict: Dict[str, Any]):
-        original_count = len(self.collections[self.name])
-        self.collections[self.name] = [
-            doc for doc in self.collections[self.name]
-            if not self._match_filter(doc, filter_dict)
-        ]
-        deleted_count = original_count - len(self.collections[self.name])
+        """Delete documents matching filter"""
+        docs = await self.find(filter_dict).to_list(length=None)
+        deleted_count = 0
+        for doc in docs:
+            self.collection_ref.document(doc["_id"]).delete()
+            deleted_count += 1
         return type('DeleteResult', (), {'deleted_count': deleted_count})()
     
     async def count_documents(self, filter_dict: Dict[str, Any]):
-        count = sum(1 for doc in self.collections[self.name] if self._match_filter(doc, filter_dict))
-        return count
-    
-    def _match_filter(self, doc: Dict[str, Any], filter_dict: Dict[str, Any]) -> bool:
-        if not filter_dict:
-            return True
-        for key, value in filter_dict.items():
-            if key not in doc or doc[key] != value:
-                return False
-        return True
+        """Count documents matching filter"""
+        docs = await self.find(filter_dict).to_list(length=None)
+        return len(docs)
 
 
-class InMemoryCursor:
-    def __init__(self, data: List[Dict[str, Any]], filter_dict: Dict[str, Any]):
-        self.data = [doc.copy() for doc in data if self._match_filter(doc, filter_dict)]
-        self.index = 0
+class FirestoreCursor:
+    """Cursor for Firestore query results with MongoDB-like API"""
     
-    def _match_filter(self, doc: Dict[str, Any], filter_dict: Dict[str, Any]) -> bool:
-        if not filter_dict:
-            return True
-        for key, value in filter_dict.items():
-            if key not in doc or doc[key] != value:
-                return False
-        return True
+    def __init__(self, collection_ref, filter_dict: Dict[str, Any]):
+        self.collection_ref = collection_ref
+        self.filter_dict = filter_dict
+        self.sort_field = None
+        self.sort_direction = 'ASCENDING'
     
     async def to_list(self, length: Optional[int] = None):
-        if length is None:
-            return self.data
-        return self.data[:length]
+        """Convert cursor to list of documents"""
+        query = self.collection_ref
+        
+        for key, value in self.filter_dict.items():
+            if key != "_id":
+                query = query.where(key, '==', value)
+        
+        if self.sort_field:
+            query = query.order_by(
+                self.sort_field, 
+                direction=firestore.Query.DESCENDING if self.sort_direction == 'DESCENDING' else firestore.Query.ASCENDING
+            )
+        
+        if length:
+            query = query.limit(length)
+        
+        docs = query.stream()
+        result = []
+        for doc in docs:
+            result.append({"_id": doc.id, **doc.to_dict()})
+        
+        if "_id" in self.filter_dict:
+            result = [d for d in result if d["_id"] == str(self.filter_dict["_id"])]
+        
+        return result
     
     def sort(self, key: str, direction: int = 1):
-        reverse = direction == -1
-        self.data.sort(key=lambda x: x.get(key, ""), reverse=reverse)
+        """Sort results by field"""
+        self.sort_field = key
+        self.sort_direction = 'DESCENDING' if direction == -1 else 'ASCENDING'
         return self
 
 
 class DatabaseManager:
     def __init__(self):
-        self.client: Optional[AsyncIOMotorClient] = None
         self.db = None
-        self.in_memory_db = InMemoryDatabase()
-        self.use_in_memory = settings.use_in_memory
+        self.firebase_app = None
         
     async def connect(self):
-        if settings.mongodb_url and not self.use_in_memory:
-            try:
-                self.client = AsyncIOMotorClient(settings.mongodb_url)
-                await self.client.admin.command('ping')
-                self.db = self.client[settings.mongodb_db_name]
-                self.use_in_memory = False
-                logger.info("Successfully connected to MongoDB")
-            except Exception as e:
-                logger.warning(f"Failed to connect to MongoDB: {e}. Using in-memory storage.")
-                self.use_in_memory = True
-        else:
-            logger.info("Using in-memory storage")
-            self.use_in_memory = True
+        """Initialize Firebase connection"""
+        try:
+            firebase_creds_path = settings.firebase_credentials_path
+            
+            if firebase_creds_path and os.path.exists(firebase_creds_path):
+                if not firebase_admin._apps:
+                    cred = credentials.Certificate(firebase_creds_path)
+                    self.firebase_app = firebase_admin.initialize_app(cred)
+                
+                self.db = firestore.client()
+                logger.info("Successfully connected to Firebase Firestore")
+            else:
+                logger.warning(f"Firebase credentials not found at: {firebase_creds_path}")
+                raise Exception("Firebase credentials not configured")
+                
+        except Exception as e:
+            logger.error(f"Failed to initialize Firebase: {e}")
+            raise
     
     async def close(self):
-        if self.client:
-            self.client.close()
+        """Close Firebase connection"""
+        if self.firebase_app:
+            firebase_admin.delete_app(self.firebase_app)
+            logger.info("Firebase connection closed")
     
     def get_collection(self, name: str):
-        if self.use_in_memory:
-            return self.in_memory_db.get_collection(name)
-        if self.db is not None:
-            return self.db[name]
-        return self.in_memory_db.get_collection(name)
+        """Get a Firestore collection"""
+        if self.db is None:
+            raise Exception("Database not initialized. Call connect() first.")
+        return FirestoreCollection(self.db.collection(name))
     
     def is_using_memory(self) -> bool:
-        return self.use_in_memory
+        """Check if using in-memory database (always False for Firebase)"""
+        return False
 
 
 db_manager = DatabaseManager()

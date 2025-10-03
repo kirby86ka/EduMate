@@ -12,9 +12,7 @@ class Settings(BaseSettings):
     app_name: str = "Adaptive Learning API"
     app_version: str = "1.0.0"
     
-    mongodb_url: Optional[str] = None
-    mongodb_db_name: str = "adaptive_learning"
-    use_in_memory: bool = True
+    firebase_credentials_path: str = "firebase-credentials.json"
     
     admin_api_key: str = "admin-key-change-in-production"
     ai_api_key: str = "ai-key-change-in-production"
