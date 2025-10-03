@@ -23,8 +23,8 @@ class FirestoreCollection:
             doc_ref.set(document)
             return type('InsertResult', (), {'inserted_id': doc_id})()
         else:
-            doc_ref = self.collection_ref.add(document)
-            return type('InsertResult', (), {'inserted_id': doc_ref[1].id})()
+            update_time, doc_ref = self.collection_ref.add(document)
+            return type('InsertResult', (), {'inserted_id': doc_ref.id})()
     
     async def insert_many(self, documents: List[Dict[str, Any]]):
         """Insert multiple documents"""
@@ -160,12 +160,19 @@ class DatabaseManager:
                 self.db = firestore.client()
                 logger.info("Successfully connected to Firebase Firestore")
             else:
-                logger.warning(f"Firebase credentials not found at: {firebase_creds_path}")
-                raise Exception("Firebase credentials not configured")
+                logger.error(f"Firebase credentials not found at: {firebase_creds_path}")
+                logger.error("Please follow the instructions in FIREBASE_SETUP.md to configure Firebase")
+                raise Exception(
+                    f"Firebase credentials not configured. "
+                    f"Expected credentials file at: {firebase_creds_path}. "
+                    f"See FIREBASE_SETUP.md for setup instructions."
+                )
                 
         except Exception as e:
+            if "Firebase credentials not configured" in str(e):
+                raise
             logger.error(f"Failed to initialize Firebase: {e}")
-            raise
+            raise Exception(f"Firebase initialization failed: {e}")
     
     async def close(self):
         """Close Firebase connection"""
