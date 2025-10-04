@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
-import { Calculator, Flask, Code } from 'lucide-react'
+import { Calculator, Beaker, Code } from 'lucide-react'
 
 export default function Subjects() {
   const navigate = useNavigate()
@@ -18,7 +18,7 @@ export default function Subjects() {
     {
       id: 'science',
       name: 'Science',
-      icon: <Flask className="w-12 h-12" />,
+      icon: <Beaker className="w-12 h-12" />,
       description: 'Explore scientific principles',
       color: 'from-green-500 to-emerald-500',
     },
