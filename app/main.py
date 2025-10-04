@@ -224,6 +224,8 @@ async def submit_answer(submission: AnswerSubmission):
         new_mastery
     )
     
+    storage.current_questions.pop(submission.session_id, None)
+    
     return {
         "is_correct": is_correct,
         "correct_answer": correct_answer,
