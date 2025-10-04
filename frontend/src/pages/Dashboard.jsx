@@ -61,35 +61,35 @@ export default function Dashboard() {
       'text-red-500'
 
     return (
-      <div className="space-y-6">
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card className="border-border bg-card">
+      <div className="space-y-4 sm:space-y-6 animate-fade-in">
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+          <Card className="border-border bg-card hover-lift animate-scale-in" style={{ animationDelay: '0s' }}>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Questions</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Total Questions</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-foreground">{data.total_questions}</div>
+              <div className="text-2xl sm:text-3xl font-bold text-foreground">{data.total_questions}</div>
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card">
+          <Card className="border-border bg-card hover-lift animate-scale-in" style={{ animationDelay: '0.1s' }}>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Accuracy</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Accuracy</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-foreground">{data.accuracy}%</div>
+              <div className="text-2xl sm:text-3xl font-bold text-foreground">{data.accuracy}%</div>
               <p className="text-xs text-muted-foreground mt-1">
                 {data.correct_answers}/{data.total_questions} correct
               </p>
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card">
+          <Card className="border-border bg-card hover-lift animate-scale-in sm:col-span-2 md:col-span-1" style={{ animationDelay: '0.2s' }}>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Bayesian Mastery Estimate</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Bayesian Mastery Estimate</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className={`text-3xl font-bold ${masteryColor}`}>
+              <div className={`text-2xl sm:text-3xl font-bold ${masteryColor}`}>
                 {masteryPercent}%
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -199,16 +199,16 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8">
+    <div className="min-h-screen bg-background py-4 sm:py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-4xl font-bold mb-8 text-center text-foreground">Analytics Dashboard</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-6 sm:mb-8 text-center text-foreground animate-slide-up">Analytics Dashboard</h1>
 
           <Tabs value={selectedSubject} onValueChange={setSelectedSubject} className="w-full">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-8 bg-secondary">
-              <TabsTrigger value="Maths" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Maths</TabsTrigger>
-              <TabsTrigger value="Science" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Science</TabsTrigger>
-              <TabsTrigger value="Python" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Python</TabsTrigger>
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-6 sm:mb-8 bg-secondary animate-fade-in">
+              <TabsTrigger value="Maths" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-smooth text-xs sm:text-sm">Maths</TabsTrigger>
+              <TabsTrigger value="Science" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-smooth text-xs sm:text-sm">Science</TabsTrigger>
+              <TabsTrigger value="Python" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-smooth text-xs sm:text-sm">Python</TabsTrigger>
             </TabsList>
 
             <TabsContent value="Maths">

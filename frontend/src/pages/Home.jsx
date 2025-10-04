@@ -47,20 +47,20 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <div 
-        className="relative h-80 bg-cover bg-center flex items-center justify-center"
+        className="relative h-[60vh] sm:h-80 bg-cover bg-center flex items-center justify-center animate-fade-in"
         style={{
           backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(/hero-bg.jpg)',
         }}
       >
-        <div className="text-center z-10">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 text-white drop-shadow-lg">
+        <div className="text-center z-10 px-4 animate-slide-up">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold mb-6 text-white drop-shadow-lg">
             Welcome to AdaptLearn
           </h1>
-          <div className="flex gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <Button 
               size="lg" 
               onClick={() => navigate('/subjects')}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 transition-smooth hover:scale-105 w-full sm:w-auto"
             >
               Try a Quick Quiz
             </Button>
@@ -68,7 +68,7 @@ export default function Home() {
               size="lg" 
               variant="outline"
               onClick={() => navigate('/dashboard')}
-              className="bg-transparent text-white border-white hover:bg-white/20"
+              className="bg-transparent text-white border-white hover:bg-white/20 transition-smooth hover:scale-105 w-full sm:w-auto"
             >
               Check Recent Quizzes
             </Button>
@@ -76,26 +76,27 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+      <div className="container mx-auto px-4 py-8 sm:py-16">
+        <div className="text-center mb-8 sm:mb-12 animate-fade-in">
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
             Personalized learning powered by Bayesian Knowledge Tracing. Our adaptive platform adjusts to your skill level in real-time.
           </p>
         </div>
         
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-12">
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto mb-8 sm:mb-12">
           {features.map((feature, index) => (
             <Card 
               key={index} 
-              className="border-2 border-border bg-card"
+              className="border-2 border-border bg-card hover-lift animate-scale-in"
+              style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="mb-4 flex justify-center">
-                  <div className="p-3 bg-primary/10 rounded-full text-primary">
+                  <div className="p-3 bg-primary/10 rounded-full text-primary transition-smooth hover:scale-110 hover:rotate-12">
                     {feature.icon}
                   </div>
                 </div>
-                <h3 className="text-xl font-semibold mb-2 text-center text-foreground">
+                <h3 className="text-lg sm:text-xl font-semibold mb-2 text-center text-foreground">
                   {feature.title}
                 </h3>
                 <p className="text-muted-foreground text-center text-sm">
