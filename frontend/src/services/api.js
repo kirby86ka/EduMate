@@ -37,32 +37,66 @@ class ApiService {
   }
 
   async getNextQuestion(sessionId) {
-    const response = await fetch(`${API_BASE_URL}/api/assessment/next-question`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ session_id: sessionId }),
-    });
-    if (!response.ok) throw new Error('Failed to get next question');
-    return response.json();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/assessment/next-question`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ session_id: sessionId }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Failed to get next question');
+      }
+      return response.json();
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error('Question generation timed out. Please try again.');
+      }
+      throw error;
+    }
   }
 
   async submitAnswer(sessionId, selectedAnswer, timeTaken, topic) {
-    const response = await fetch(`${API_BASE_URL}/api/assessment/submit-answer`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        session_id: sessionId,
-        selected_answer: selectedAnswer,
-        time_spent: timeTaken,
-        topic: topic,
-      }),
-    });
-    if (!response.ok) throw new Error('Failed to submit answer');
-    return response.json();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/assessment/submit-answer`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          selected_answer: selectedAnswer,
+          time_spent: timeTaken,
+          topic: topic,
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Failed to submit answer');
+      }
+      return response.json();
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error('Answer submission timed out. Please try again.');
+      }
+      throw error;
+    }
   }
 
   async completeAssessment(sessionId) {

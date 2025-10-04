@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import asyncio
 from typing import Dict, Any, List
 from google import genai
 from google.genai import types
@@ -91,20 +92,34 @@ Respond with JSON matching this exact format:
 }}
 {previous_context}"""
 
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=[
-                    types.Content(role="user", parts=[types.Part(text=f"Generate a {difficulty} question about {topic} in {subject}.")])
-                ],
-                config=types.GenerateContentConfig(
-                    system_instruction=system_prompt,
-                    response_mime_type="application/json",
-                    response_schema=Question,
-                ),
-            )
-            
-            raw_json = response.text
-            logger.info(f"Generated question JSON: {raw_json}")
+            # Run Gemini API call in thread pool with timeout
+            loop = asyncio.get_event_loop()
+            try:
+                response = await asyncio.wait_for(
+                    loop.run_in_executor(
+                        None,
+                        lambda: self.client.models.generate_content(
+                            model="gemini-2.5-flash",
+                            contents=[
+                                types.Content(role="user", parts=[types.Part(text=f"Generate a {difficulty} question about {topic} in {subject}.")])
+                            ],
+                            config=types.GenerateContentConfig(
+                                system_instruction=system_prompt,
+                                response_mime_type="application/json",
+                                response_schema=Question,
+                                temperature=0.7,
+                                max_output_tokens=500,
+                            ),
+                        )
+                    ),
+                    timeout=15.0  # 15 second timeout
+                )
+                
+                raw_json = response.text
+                logger.info(f"Generated question JSON: {raw_json}")
+            except asyncio.TimeoutError:
+                logger.error(f"Gemini API timeout after 15 seconds for {subject}/{topic}/{difficulty}")
+                raise Exception("Question generation timed out. Please try again.")
             
             if raw_json:
                 data = json.loads(raw_json)
