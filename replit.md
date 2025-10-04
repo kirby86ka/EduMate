@@ -167,7 +167,23 @@ Preferred communication style: Simple, everyday language.
 
 ## Deployment Options
 
-### Docker Deployment
+### Vercel Deployment (Recommended for Production)
+- **Serverless Deployment**: FastAPI backend + React frontend on Vercel
+  - `vercel.json`: Configuration for builds and routing
+  - `api/index.py`: Serverless function handler using Mangum
+  - `.vercelignore`: Excludes unnecessary files from deployment
+  - See `VERCEL_DEPLOY.md` for complete setup instructions
+- **Features**:
+  - Auto-deployments on git push
+  - Global CDN for frontend assets
+  - Serverless API functions
+  - Environment variable management
+  - Free SSL certificates
+  - Preview deployments for PRs
+- **Setup**: Connect GitHub repo to Vercel, add environment variables, deploy
+- **Environment**: Requires GEMINI_API_KEY and SESSION_SECRET
+
+### Docker Deployment (Self-Hosting)
 - **Docker Support**: Full containerization with multi-stage build
   - `Dockerfile`: Multi-stage build (Node.js for frontend, Python for backend)
   - `docker-compose.yml`: Orchestrates backend and frontend services
