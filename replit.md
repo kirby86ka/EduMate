@@ -175,34 +175,19 @@ Complete documentation available in:
 - **API Integration**: Connects to FastAPI backend on port 8000
 - **Location**: `/frontend` directory
 
-## Deployment Options
+## Deployment
 
-### Vercel Deployment (Recommended for Production)
-- **Serverless Deployment**: FastAPI backend + React frontend on Vercel
-  - `vercel.json`: Configuration for builds and routing
-  - `api/index.py`: Serverless function handler using Mangum
-  - `.vercelignore`: Excludes unnecessary files from deployment
-  - See `VERCEL_DEPLOY.md` for complete setup instructions
+### Replit Deployment (Current)
+- **Autoscale Deployment**: Single-port architecture with FastAPI serving both API and static frontend
+  - `.replit`: Main configuration file for deployment and workflows
+  - FastAPI serves React build from `frontend/dist` on port 8000
+  - Auto-deployment on file changes
+  - Environment secrets managed in Replit dashboard
 - **Features**:
-  - Auto-deployments on git push
-  - Global CDN for frontend assets
-  - Serverless API functions
-  - Environment variable management
+  - Built-in scaling based on traffic
   - Free SSL certificates
-  - Preview deployments for PRs
-- **Setup**: Connect GitHub repo to Vercel, add environment variables, deploy
+  - Custom domain support
+  - Automatic HTTPS
+  - Zero-downtime deployments
+- **Setup**: Click "Deploy" button in Replit, configure environment secrets
 - **Environment**: Requires GEMINI_API_KEY and SESSION_SECRET
-
-### Docker Deployment (Self-Hosting)
-- **Docker Support**: Full containerization with multi-stage build
-  - `Dockerfile`: Multi-stage build (Node.js for frontend, Python for backend)
-  - `docker-compose.yml`: Orchestrates backend and frontend services
-  - `nginx.conf`: Nginx configuration for frontend with API proxy
-  - `.dockerignore`: Optimizes build by excluding unnecessary files
-  - `requirements.txt`: Python dependencies for backend
-  - See `DOCKER.md` for complete setup instructions
-- **Services**:
-  - Backend: FastAPI on port 8000 with health checks
-  - Frontend: Nginx serving React build on port 5000
-  - Network: Custom Docker network for service communication
-- **Environment**: Requires GEMINI_API_KEY and SESSION_SECRET in .env file

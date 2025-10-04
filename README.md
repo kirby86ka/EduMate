@@ -1,4 +1,4 @@
-# 🧠 AdaptLearn - Adaptive Learning Platform
+#  AdaptLearn - Adaptive Learning Platform
 
 An intelligent educational platform that personalizes assessments using **Bayesian Knowledge Tracing (BKT)** and **AI-powered question generation**. The system dynamically adjusts question difficulty based on real-time performance, providing personalized learning paths for students.
 
@@ -7,26 +7,26 @@ An intelligent educational platform that personalizes assessments using **Bayesi
 ![React](https://img.shields.io/badge/React-19-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Latest-009688)
 
-## ✨ Features
+##  Features
 
-### 🎯 Adaptive Assessment Engine
+###  Adaptive Assessment Engine
 - **Bayesian Knowledge Tracing (BKT)**: Real-time mastery estimation
 - **Dynamic Difficulty Adjustment**: Questions adapt based on performance
 - **AI Question Generation**: Powered by Google Gemini 2.5 Flash
 - **LaTeX & Markdown Support**: Beautiful rendering of math equations and code
 
-### 📊 Analytics & Insights
+###  Analytics & Insights
 - **Subject-Specific Dashboards**: Track progress across Maths, Science, and Python
 - **Growth Charts**: Visualize accuracy trends over time
 - **Mastery Estimates**: Bayesian-based proficiency tracking with color-coded levels
 - **Question History**: Complete breakdown of topics and difficulty
 
-### 🎓 Personalized Learning
+###  Personalized Learning
 - **AI-Powered Recommendations**: Custom study plans based on performance
 - **Learning Path Generation**: Targeted resource suggestions
 - **Topic-Level Tracking**: Granular skill monitoring across subjects
 
-### 🎨 Modern UI/UX
+###  Modern UI/UX
 - **Dark Theme**: Eye-friendly design with yellow branding
 - **Responsive Design**: Mobile-first approach for all devices
 - **Smooth Animations**: Fluid transitions and hover effects
@@ -252,31 +252,31 @@ else:
 - **Dashboard**: Analytics with subject-specific tabs
 - **Personalized Path**: AI-generated learning recommendations
 
-## 🐳 Deployment
+## 🚀 Deployment
 
-### Docker
-```bash
-docker-compose up -d
-```
+### Replit (Recommended)
+This project is configured for Replit's Autoscale deployment with single-port architecture:
 
-Services:
-- Backend: `http://localhost:8000`
-- Frontend: `http://localhost:5000`
-
-### Vercel (Recommended)
-1. Connect GitHub repo to Vercel
-2. Add environment variables in Vercel dashboard:
-   - `GEMINI_API_KEY`
-   - `SESSION_SECRET`
-3. Deploy automatically on push
-
-See [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md) for detailed instructions.
-
-### Replit (Autoscale)
-Configured with `.replit` for single-port architecture:
-- FastAPI serves both API and static frontend
+**Features:**
+- FastAPI serves both API and static frontend on port 8000
 - Auto-deployment on file changes
-- Environment secrets managed in Replit dashboard
+- Environment secrets managed securely in Replit dashboard
+- Built-in scaling based on traffic
+- Free SSL certificates and custom domains
+
+**Setup:**
+1. Fork or import this repository to Replit
+2. Add environment secrets in the Secrets tab:
+   - `GEMINI_API_KEY`: Your Google Gemini API key
+   - `SESSION_SECRET`: A random secret string
+3. Click "Run" - the `.replit` file handles the rest
+4. Deploy using the "Deploy" button in Replit
+
+**Configuration:**
+The `.replit` file is pre-configured with:
+- Single-port autoscale deployment
+- Automatic frontend build on startup
+- Backend server with proper CORS settings
 
 ## 📁 Project Structure
 
@@ -305,13 +305,11 @@ adaptlearn/
 │   │   └── styles/           # Global styles
 │   ├── package.json
 │   └── vite.config.js
-├── api/                       # Vercel serverless
-│   └── index.py
 ├── .replit                    # Replit configuration
-├── docker-compose.yml         # Docker setup
-├── Dockerfile                 # Multi-stage build
 ├── requirements.txt           # Python dependencies
-└── README.md
+├── CONTRIBUTING.md            # Contribution guidelines
+├── LICENSE                    # MIT License
+└── README.md                  # Project documentation
 ```
 
 ## 🔧 Configuration
