@@ -4,6 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import api from '../services/api'
 import { CheckCircle2, XCircle } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkMath from 'remark-math'
+import remarkGfm from 'remark-gfm'
+import rehypeKatex from 'rehype-katex'
+import 'katex/dist/katex.min.css'
 
 const TOTAL_QUESTIONS = 10
 
@@ -177,7 +182,14 @@ export default function Quiz() {
                               {attempt.topic}
                             </span>
                           </div>
-                          <p className="text-sm mb-2 text-foreground">{attempt.question}</p>
+                          <div className="text-sm mb-2 text-foreground prose prose-sm prose-invert max-w-none">
+                            <ReactMarkdown 
+                              remarkPlugins={[remarkMath, remarkGfm]}
+                              rehypePlugins={[rehypeKatex]}
+                            >
+                              {attempt.question}
+                            </ReactMarkdown>
+                          </div>
                           <div className="flex gap-4 text-sm">
                             <span className="text-foreground">
                               Your answer: <span className={attempt.is_correct ? 'text-green-500 font-medium' : 'text-red-500 font-medium'}>
@@ -224,7 +236,11 @@ export default function Quiz() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-2xl border-border bg-card">
           <CardContent className="p-8 text-center">
-            <p className="text-muted-foreground">Loading question...</p>
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-muted-foreground">Generating your next question with AI...</p>
+              <p className="text-sm text-muted-foreground/60">This may take a few seconds</p>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -263,7 +279,18 @@ export default function Quiz() {
 
           <Card className="border-border bg-card animate-scale-in hover-lift">
             <CardHeader>
-              <CardTitle className="text-lg sm:text-xl text-foreground">{question.question}</CardTitle>
+              <CardTitle className="text-lg sm:text-xl text-foreground">
+                <ReactMarkdown 
+                  remarkPlugins={[remarkMath, remarkGfm]}
+                  rehypePlugins={[rehypeKatex]}
+                  className="prose prose-invert max-w-none"
+                  components={{
+                    p: ({node, ...props}) => <span {...props} />
+                  }}
+                >
+                  {question.question}
+                </ReactMarkdown>
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 sm:space-y-3">
               {['A', 'B', 'C', 'D'].map((option) => {
@@ -295,8 +322,18 @@ export default function Quiz() {
                     onClick={() => !showFeedback && setSelectedAnswer(option)}
                     disabled={showFeedback}
                   >
-                    <span className="font-semibold mr-2 sm:mr-3 text-sm sm:text-base">{option})</span>
-                    <span className="text-sm sm:text-base">{optionText}</span>
+                    <div className="flex items-start gap-2 sm:gap-3 w-full">
+                      <span className="font-semibold text-sm sm:text-base flex-shrink-0">{option})</span>
+                      <div className="flex-1 text-sm sm:text-base break-words overflow-wrap-anywhere">
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkMath, remarkGfm]}
+                          rehypePlugins={[rehypeKatex]}
+                          className="prose prose-sm prose-invert max-w-none [&>p]:m-0 [&>code]:text-xs"
+                        >
+                          {optionText}
+                        </ReactMarkdown>
+                      </div>
+                    </div>
                   </Button>
                 )
               })}
@@ -330,9 +367,14 @@ export default function Quiz() {
                       {feedback.is_correct ? 'Correct!' : 'Incorrect'}
                     </span>
                   </div>
-                  <p className="text-muted-foreground mb-2">
-                    {feedback.explanation}
-                  </p>
+                  <div className="text-muted-foreground mb-2 prose prose-sm prose-invert max-w-none">
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkMath, remarkGfm]}
+                      rehypePlugins={[rehypeKatex]}
+                    >
+                      {feedback.explanation}
+                    </ReactMarkdown>
+                  </div>
                   <p className="text-sm text-muted-foreground">
                     Mastery Level: {(feedback.new_mastery_level * 100).toFixed(0)}%
                   </p>

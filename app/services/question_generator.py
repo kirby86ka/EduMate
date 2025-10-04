@@ -69,22 +69,25 @@ class QuestionGenerator:
 Generate a {difficulty_descriptions.get(difficulty, 'medium')} multiple-choice question about {topic} in {subject}.
 
 Requirements:
-1. The question should be clear and unambiguous
-2. Provide exactly 4 options (A, B, C, D)
-3. Only ONE option should be correct
-4. Include a brief explanation of why the correct answer is right
-5. Make the question appropriate for the {difficulty} difficulty level
-6. Ensure the question is educational and tests understanding, not just memorization
+1. Question MUST be concise and clear (MAX 2 sentences, ideally 1 sentence)
+2. Each option MUST be brief and to the point (MAX 15 words per option)
+3. Provide exactly 4 options (A, B, C, D)
+4. Only ONE option should be correct
+5. Explanation should be 1-2 sentences maximum
+6. Make the question appropriate for the {difficulty} difficulty level
+7. Use LaTeX notation for math (wrap in $ for inline, $$ for display)
+8. Use markdown code blocks for code (```python or ```javascript)
+9. Keep it simple - avoid overly complex phrasing
 
 Respond with JSON matching this exact format:
 {{
-    "question": "The question text",
-    "option_a": "First option",
-    "option_b": "Second option", 
-    "option_c": "Third option",
-    "option_d": "Fourth option",
+    "question": "The question text (max 2 sentences)",
+    "option_a": "First option (max 15 words)",
+    "option_b": "Second option (max 15 words)", 
+    "option_c": "Third option (max 15 words)",
+    "option_d": "Fourth option (max 15 words)",
     "correct_answer": "A" or "B" or "C" or "D",
-    "explanation": "Brief explanation of the correct answer"
+    "explanation": "Brief 1-2 sentence explanation"
 }}
 {previous_context}"""
 
