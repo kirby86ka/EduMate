@@ -48,7 +48,7 @@ export default function Quiz() {
         return
       }
       
-      setQuestion(response.question)
+      setQuestion(response)
       setLoading(false)
     } catch (err) {
       setError('Failed to load question')
@@ -63,9 +63,9 @@ export default function Quiz() {
       const timeTaken = Math.floor((Date.now() - startTime) / 1000)
       const response = await api.submitAnswer(
         sessionId,
-        question.id,
         selectedAnswer,
-        timeTaken
+        timeTaken,
+        question.topic
       )
 
       setIsCorrect(response.is_correct)
@@ -113,7 +113,7 @@ export default function Quiz() {
                 Question {questionsAnswered + 1}
               </span>
               <span className="px-3 py-1 bg-accent rounded-full text-sm font-medium">
-                {question.difficulty}
+                {question.current_difficulty}
               </span>
             </div>
           </div>

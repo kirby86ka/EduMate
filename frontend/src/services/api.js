@@ -38,7 +38,7 @@ class ApiService {
     return response.json();
   }
 
-  async submitAnswer(sessionId, questionId, answer, timeTaken) {
+  async submitAnswer(sessionId, selectedAnswer, timeTaken, topic) {
     const response = await fetch(`${API_BASE_URL}/api/assessment/submit-answer`, {
       method: 'POST',
       headers: {
@@ -46,9 +46,9 @@ class ApiService {
       },
       body: JSON.stringify({
         session_id: sessionId,
-        question_id: questionId,
-        answer: answer,
-        time_taken_seconds: timeTaken,
+        selected_answer: selectedAnswer,
+        time_spent: timeTaken,
+        topic: topic,
       }),
     });
     if (!response.ok) throw new Error('Failed to submit answer');
