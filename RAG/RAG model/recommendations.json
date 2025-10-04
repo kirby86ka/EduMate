@@ -1,0 +1,157 @@
+{
+  "student": "rac",
+  "date": "2025-10-04 15:39:45",
+  "score": "0/5 (0%)",
+  "recommendations": [
+    {
+      "topic": "JavaScript Variables",
+      "question": "What is the correct way to declare a constant variable in JavaScript?",
+      "resources": {
+        "youtube": [
+          {
+            "title": "JavaScript Variables - var, let, and const",
+            "url": "https://www.youtube.com/watch?v=9WIJQDvt4Us",
+            "channel": "Programming with Mosh"
+          },
+          {
+            "title": "JavaScript Variables Explained",
+            "url": "https://www.youtube.com/watch?v=edlFjlzxkSI",
+            "channel": "freeCodeCamp"
+          }
+        ],
+        "articles": [
+          {
+            "title": "MDN: JavaScript Variables",
+            "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Grammar_and_types#declarations"
+          },
+          {
+            "title": "JavaScript.info - Variables",
+            "url": "https://javascript.info/variables"
+          }
+        ],
+        "explanation": "JavaScript has three ways to declare variables: var (function-scoped, older), let (block-scoped, can be reassigned), and const (block-scoped, cannot be reassigned). Use const by default, let when you need to reassign, and avoid var in modern code.",
+        "tip": "Practice declaring variables with const first, and only use let when you know the value will change."
+      }
+    },
+    {
+      "topic": "React Hooks",
+      "question": "Which React Hook is used for managing side effects?",
+      "resources": {
+        "youtube": [
+          {
+            "title": "React Hooks Tutorial - useEffect",
+            "url": "https://www.youtube.com/watch?v=0ZJgIjIuY7U",
+            "channel": "Web Dev Simplified"
+          },
+          {
+            "title": "Complete React Hooks Guide",
+            "url": "https://www.youtube.com/watch?v=TNhaISOUy6Q",
+            "channel": "Codevolution"
+          }
+        ],
+        "articles": [
+          {
+            "title": "React Docs: useEffect",
+            "url": "https://react.dev/reference/react/useEffect"
+          },
+          {
+            "title": "Complete Guide to useEffect",
+            "url": "https://overreacted.io/a-complete-guide-to-useeffect/"
+          }
+        ],
+        "explanation": "useEffect is a React Hook for handling side effects in functional components. Side effects include data fetching, subscriptions, manually changing the DOM, and timers. It runs after the component renders and can optionally clean up when the component unmounts.",
+        "tip": "Start by understanding the dependency array - empty [] runs once, [value] runs when value changes, and no array runs after every render."
+      }
+    },
+    {
+      "topic": "Data Structures",
+      "question": "What is the time complexity of searching in a balanced binary search tree?",
+      "resources": {
+        "youtube": [
+          {
+            "title": "Data Structures Easy to Advanced",
+            "url": "https://www.youtube.com/watch?v=RBSGKlAvoiM",
+            "channel": "freeCodeCamp"
+          },
+          {
+            "title": "Big O Notation Full Course",
+            "url": "https://www.youtube.com/watch?v=Mo4vesaut8g",
+            "channel": "freeCodeCamp"
+          }
+        ],
+        "articles": [
+          {
+            "title": "Big O Cheat Sheet",
+            "url": "https://www.bigocheatsheet.com/"
+          },
+          {
+            "title": "GeeksforGeeks: Binary Search Tree",
+            "url": "https://www.geeksforgeeks.org/binary-search-tree-data-structure/"
+          }
+        ],
+        "explanation": "Binary Search Trees (BST) have O(log n) time complexity for search in balanced trees because each comparison eliminates half of the remaining nodes. However, in worst-case unbalanced trees (like a linked list), it degrades to O(n). Self-balancing trees like AVL and Red-Black trees maintain O(log n).",
+        "tip": "Draw out a balanced BST and trace through a search operation to visualize why it's O(log n) - you're halving the search space at each step."
+      }
+    },
+    {
+      "topic": "CSS Flexbox",
+      "question": "Which property changes the main axis direction in flexbox?",
+      "resources": {
+        "youtube": [
+          {
+            "title": "Flexbox CSS in 20 Minutes",
+            "url": "https://www.youtube.com/watch?v=JJSoEo8JSnc",
+            "channel": "Traversy Media"
+          },
+          {
+            "title": "Learn Flexbox in 15 Minutes",
+            "url": "https://www.youtube.com/watch?v=fYq5PXgSsbE",
+            "channel": "Web Dev Simplified"
+          }
+        ],
+        "articles": [
+          {
+            "title": "CSS Tricks: Complete Guide to Flexbox",
+            "url": "https://css-tricks.com/snippets/css/a-guide-to-flexbox/"
+          },
+          {
+            "title": "MDN: Flexbox",
+            "url": "https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Flexbox"
+          }
+        ],
+        "explanation": "Flexbox is a CSS layout model that makes it easier to align and distribute space among items in a container. The flex-direction property sets the main axis (row, row-reverse, column, column-reverse), determining how flex items are placed in the container.",
+        "tip": "Use the Chrome DevTools flexbox inspector to visualize and experiment with different flex properties in real-time."
+      }
+    },
+    {
+      "topic": "Git Version Control",
+      "question": "What command creates a new branch and switches to it?",
+      "resources": {
+        "youtube": [
+          {
+            "title": "Git and GitHub for Beginners",
+            "url": "https://www.youtube.com/watch?v=RGOj5yH7evk",
+            "channel": "freeCodeCamp"
+          },
+          {
+            "title": "Git Branching Tutorial",
+            "url": "https://www.youtube.com/watch?v=e2IbNHi4uCI",
+            "channel": "The Net Ninja"
+          }
+        ],
+        "articles": [
+          {
+            "title": "Git Branching - Basic Branching",
+            "url": "https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging"
+          },
+          {
+            "title": "Atlassian Git Branching Tutorial",
+            "url": "https://www.atlassian.com/git/tutorials/using-branches"
+          }
+        ],
+        "explanation": "Git checkout -b branch-name creates a new branch and immediately switches to it in one command. It's shorthand for 'git branch branch-name' followed by 'git checkout branch-name'. This is the most common way to start working on a new feature.",
+        "tip": "Name your branches descriptively (feature/login-page, bugfix/header-alignment) to make it clear what each branch is for."
+      }
+    }
+  ]
+}

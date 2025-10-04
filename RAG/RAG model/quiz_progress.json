@@ -1,0 +1,52 @@
+{
+  "userId": "rac",
+  "quizId": "programming_quiz_001",
+  "dateTaken": "2025-10-04 15:39:45",
+  "totalQuestions": 5,
+  "correctAnswers": 0,
+  "incorrectAnswers": 5,
+  "incorrectlyAnswered": [
+    {
+      "questionId": 1,
+      "topic": "JavaScript Variables",
+      "questionText": "What is the correct way to declare a constant variable in JavaScript?",
+      "studentAnswer": "A",
+      "correctAnswer": "C",
+      "explanation": "const is used to declare constants that cannot be reassigned"
+    },
+    {
+      "questionId": 2,
+      "topic": "React Hooks",
+      "questionText": "Which React Hook is used for managing side effects?",
+      "studentAnswer": "A",
+      "correctAnswer": "B",
+      "explanation": "useEffect is used for side effects like API calls, subscriptions, and DOM manipulation"
+    },
+    {
+      "questionId": 3,
+      "topic": "Data Structures",
+      "questionText": "What is the time complexity of searching in a balanced binary search tree?",
+      "studentAnswer": "A",
+      "correctAnswer": "C",
+      "explanation": "Binary search trees have O(log n) search time when balanced"
+    },
+    {
+      "questionId": 4,
+      "topic": "CSS Flexbox",
+      "questionText": "Which property changes the main axis direction in flexbox?",
+      "studentAnswer": "A",
+      "correctAnswer": "B",
+      "explanation": "flex-direction changes the main axis (row or column)"
+    },
+    {
+      "questionId": 5,
+      "topic": "Git Version Control",
+      "questionText": "What command creates a new branch and switches to it?",
+      "studentAnswer": "A",
+      "correctAnswer": "B",
+      "explanation": "git checkout -b creates and switches to a new branch in one command"
+    }
+  ],
+  "correctlyAnswered": [],
+  "score": "0/5 (0%)"
+}
