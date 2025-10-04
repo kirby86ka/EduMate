@@ -105,7 +105,15 @@ Preferred communication style: Simple, everyday language.
 - **HTTPX**: Async HTTP client for API testing
 - **Python-dotenv**: Environment variable loading from .env files
 
-### Frontend Integration
-- Expects frontend running on `http://localhost:3000`
-- CORS pre-configured for this origin
-- API responses in JSON format following OpenAPI specification
+### Frontend Application
+- **Framework**: React 19 with Vite for fast development
+- **Port**: Runs on port 5000 (Replit webview requirement)
+- **Features**:
+  - Subject selection with live question counts
+  - Adaptive assessment flow with real-time feedback
+  - Question difficulty badges and progress tracking
+  - Results dashboard with performance metrics
+  - Personalized learning path visualization
+- **API Integration**: Connects to FastAPI backend on port 8000
+- **Styling**: Modern gradient design with smooth animations
+- **Location**: `/frontend` directory
