@@ -68,13 +68,15 @@ Preferred communication style: Simple, everyday language.
   - `attempts`: Question attempt history linked to sessions
   - `user_skills`: Mastery tracking per user/topic/subject
   - `question_history`: Track asked questions to avoid duplicates
+  - `current_questions`: Stores complete question payloads for answer validation
 - **Data Persistence**: All data stored in-memory during runtime (resets on restart)
 - **ID Strategy**: UUID-based session and attempt IDs
+- **Question Lifecycle**: Questions are generated → stored → validated → cleared after submission to ensure accurate BKT updates
 
 ### Configuration Management
 - **Environment-based Settings**: Pydantic Settings for type-safe configuration
 - **Key Configurations**:
-  - Firebase service account credentials (JSON file path)
+  - Gemini API key for AI question generation
   - API keys for authentication
   - CORS origins for frontend integration
   - Application metadata
