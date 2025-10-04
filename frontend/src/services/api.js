@@ -76,12 +76,23 @@ class ApiService {
     return response.json();
   }
 
-  async getLearningRecommendations(userId = null) {
-    const url = userId 
-      ? `${API_BASE_URL}/api/learning-path/recommendations?user_id=${userId}`
-      : `${API_BASE_URL}/api/learning-path/recommendations`;
+  async getLearningRecommendations(userId = null, subject = null) {
+    let url = `${API_BASE_URL}/api/learning-path/recommendations`;
+    const params = new URLSearchParams();
+    if (userId) params.append('user_id', userId);
+    if (subject) params.append('subject', subject);
+    if (params.toString()) url += `?${params.toString()}`;
     const response = await fetch(url);
     if (!response.ok) throw new Error('Failed to get recommendations');
+    return response.json();
+  }
+
+  async getLastQuizResults(userId = null) {
+    const url = userId 
+      ? `${API_BASE_URL}/api/learning-path/last-quiz?user_id=${userId}`
+      : `${API_BASE_URL}/api/learning-path/last-quiz`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to get last quiz results');
     return response.json();
   }
 }

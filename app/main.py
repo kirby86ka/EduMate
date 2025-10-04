@@ -374,7 +374,7 @@ async def get_user_skills(user_id: str):
 
 
 @app.get("/api/learning-path/recommendations", tags=["Learning Path"])
-async def get_learning_recommendations(user_id: Optional[str] = None):
+async def get_learning_recommendations(user_id: Optional[str] = None, subject: Optional[str] = None):
     """Generate AI-powered learning recommendations based on quiz performance"""
     
     if not user_id:
@@ -382,10 +382,13 @@ async def get_learning_recommendations(user_id: Optional[str] = None):
     else:
         user_sessions = [s for s in storage.sessions.values() if s.get("user_id") == user_id]
     
+    if subject:
+        user_sessions = [s for s in user_sessions if s.get("subject") == subject]
+    
     if not user_sessions:
         return {
             "has_data": False,
-            "message": "No quiz data available. Complete a quiz to get personalized recommendations!",
+            "message": f"No quiz data available for {subject if subject else 'any subject'}. Complete a quiz to get personalized recommendations!",
             "recommendations": [],
             "learning_resources": []
         }
@@ -394,12 +397,12 @@ async def get_learning_recommendations(user_id: Optional[str] = None):
     subject_performance = {}
     
     for session in user_sessions:
-        subject = session["subject"]
+        subj = session["subject"]
         session_attempts = storage.get_attempts(session["session_id"])
         all_attempts.extend(session_attempts)
         
-        if subject not in subject_performance:
-            subject_performance[subject] = {
+        if subj not in subject_performance:
+            subject_performance[subj] = {
                 "total": 0,
                 "correct": 0,
                 "topics": {}
@@ -407,25 +410,25 @@ async def get_learning_recommendations(user_id: Optional[str] = None):
         
         for attempt in session_attempts:
             topic = attempt.get("topic", "General")
-            subject_performance[subject]["total"] += 1
+            subject_performance[subj]["total"] += 1
             if attempt.get("is_correct"):
-                subject_performance[subject]["correct"] += 1
+                subject_performance[subj]["correct"] += 1
             
-            if topic not in subject_performance[subject]["topics"]:
-                subject_performance[subject]["topics"][topic] = {"total": 0, "correct": 0}
-            subject_performance[subject]["topics"][topic]["total"] += 1
+            if topic not in subject_performance[subj]["topics"]:
+                subject_performance[subj]["topics"][topic] = {"total": 0, "correct": 0}
+            subject_performance[subj]["topics"][topic]["total"] += 1
             if attempt.get("is_correct"):
-                subject_performance[subject]["topics"][topic]["correct"] += 1
+                subject_performance[subj]["topics"][topic]["correct"] += 1
     
     weak_areas = []
-    for subject, perf in subject_performance.items():
+    for subj, perf in subject_performance.items():
         accuracy = (perf["correct"] / perf["total"] * 100) if perf["total"] > 0 else 0
         
         for topic, topic_perf in perf["topics"].items():
             topic_accuracy = (topic_perf["correct"] / topic_perf["total"] * 100) if topic_perf["total"] > 0 else 0
             if topic_accuracy < 60:
                 weak_areas.append({
-                    "subject": subject,
+                    "subject": subj,
                     "topic": topic,
                     "accuracy": round(topic_accuracy, 1),
                     "questions_attempted": topic_perf["total"]
@@ -433,7 +436,8 @@ async def get_learning_recommendations(user_id: Optional[str] = None):
     
     weak_areas.sort(key=lambda x: x["accuracy"])
     
-    prompt = f"""Based on a student's quiz performance, provide personalized learning recommendations.
+    subject_name = subject if subject else "all subjects"
+    prompt = f"""Based on a student's {subject_name} quiz performance, provide personalized learning recommendations using markdown formatting.
 
 Performance Data:
 """
@@ -442,12 +446,12 @@ Performance Data:
         prompt += f"- {area['subject']} - {area['topic']}: {area['accuracy']}% accuracy ({area['questions_attempted']} questions)\n"
     
     prompt += """
-Please provide:
-1. A brief overall assessment (2-3 sentences)
-2. Top 3 specific areas to focus on with actionable study tips
-3. Recommended study approach
+Please provide in markdown format with the following structure:
+1. **Overall Assessment** (2-3 sentences)
+2. **Top 3 Focus Areas** with actionable study tips (use numbered list)
+3. **Recommended Study Approach** (2-3 sentences)
 
-Keep the response concise and encouraging."""
+Use markdown formatting including **bold**, lists, and clear sections. Be concise and encouraging. You may use LaTeX math notation where appropriate using $ for inline and $$ for display math."""
     
     try:
         ai_recommendations = await question_generator.generate_recommendations(prompt)
@@ -470,9 +474,51 @@ Keep the response concise and encouraging."""
     
     return {
         "has_data": True,
+        "subject": subject,
         "ai_recommendations": ai_recommendations,
         "weak_areas": weak_areas[:5],
         "learning_resources": learning_resources,
         "total_quizzes": len(user_sessions),
         "total_questions": len(all_attempts)
+    }
+
+
+@app.get("/api/learning-path/last-quiz", tags=["Learning Path"])
+async def get_last_quiz_results(user_id: Optional[str] = None):
+    """Get the most recent quiz results"""
+    
+    if not user_id:
+        user_sessions = list(storage.sessions.values())
+    else:
+        user_sessions = [s for s in storage.sessions.values() if s.get("user_id") == user_id]
+    
+    if not user_sessions:
+        return {
+            "has_data": False,
+            "message": "No quiz data available."
+        }
+    
+    completed_sessions = [s for s in user_sessions if s.get("status") == "completed"]
+    
+    if not completed_sessions:
+        return {
+            "has_data": False,
+            "message": "No completed quizzes found."
+        }
+    
+    last_session = max(completed_sessions, key=lambda s: s.get("started_at", ""))
+    session_attempts = storage.get_attempts(last_session["session_id"])
+    
+    correct_count = sum(1 for a in session_attempts if a.get("is_correct"))
+    total_count = len(session_attempts)
+    
+    return {
+        "has_data": True,
+        "subject": last_session.get("subject"),
+        "session_id": last_session["session_id"],
+        "total_questions": total_count,
+        "correct_answers": correct_count,
+        "accuracy": round((correct_count / total_count * 100) if total_count > 0 else 0, 1),
+        "started_at": last_session.get("started_at"),
+        "completed_at": last_session.get("completed_at")
     }
