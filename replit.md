@@ -164,3 +164,19 @@ Preferred communication style: Simple, everyday language.
 - **Styling**: Dark theme with shadcn/ui components and consistent color palette
 - **API Integration**: Connects to FastAPI backend on port 8000
 - **Location**: `/frontend` directory
+
+## Deployment Options
+
+### Docker Deployment
+- **Docker Support**: Full containerization with multi-stage build
+  - `Dockerfile`: Multi-stage build (Node.js for frontend, Python for backend)
+  - `docker-compose.yml`: Orchestrates backend and frontend services
+  - `nginx.conf`: Nginx configuration for frontend with API proxy
+  - `.dockerignore`: Optimizes build by excluding unnecessary files
+  - `requirements.txt`: Python dependencies for backend
+  - See `DOCKER.md` for complete setup instructions
+- **Services**:
+  - Backend: FastAPI on port 8000 with health checks
+  - Frontend: Nginx serving React build on port 5000
+  - Network: Custom Docker network for service communication
+- **Environment**: Requires GEMINI_API_KEY and SESSION_SECRET in .env file
