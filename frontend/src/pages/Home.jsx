@@ -1,9 +1,32 @@
 import { useNavigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { BookOpen, Target, TrendingUp, Sparkles, BarChart, Trophy, ArrowRight } from 'lucide-react'
 import api from '../services/api'
+
+const FeatureCard = memo(({ feature, index }) => (
+  <Card 
+    className="border-2 border-border bg-card hover-lift animate-scale-in"
+    style={{ animationDelay: `${index * 0.1}s` }}
+  >
+    <CardContent className="p-4 sm:p-6">
+      <div className="mb-4 flex justify-center">
+        <div className="p-3 bg-primary/10 rounded-full text-primary transition-smooth hover:scale-110 hover:rotate-12">
+          {feature.icon}
+        </div>
+      </div>
+      <h3 className="text-lg sm:text-xl font-semibold mb-2 text-center text-foreground">
+        {feature.title}
+      </h3>
+      <p className="text-muted-foreground text-center text-sm">
+        {feature.description}
+      </p>
+    </CardContent>
+  </Card>
+))
+
+FeatureCard.displayName = 'FeatureCard'
 
 export default function Home() {
   const navigate = useNavigate()
@@ -85,25 +108,7 @@ export default function Home() {
         
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto mb-8 sm:mb-12">
           {features.map((feature, index) => (
-            <Card 
-              key={index} 
-              className="border-2 border-border bg-card hover-lift animate-scale-in"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <CardContent className="p-4 sm:p-6">
-                <div className="mb-4 flex justify-center">
-                  <div className="p-3 bg-primary/10 rounded-full text-primary transition-smooth hover:scale-110 hover:rotate-12">
-                    {feature.icon}
-                  </div>
-                </div>
-                <h3 className="text-lg sm:text-xl font-semibold mb-2 text-center text-foreground">
-                  {feature.title}
-                </h3>
-                <p className="text-muted-foreground text-center text-sm">
-                  {feature.description}
-                </p>
-              </CardContent>
-            </Card>
+            <FeatureCard key={index} feature={feature} index={index} />
           ))}
         </div>
 
