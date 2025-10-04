@@ -106,7 +106,6 @@ Respond with JSON matching this exact format:
                             config=types.GenerateContentConfig(
                                 system_instruction=system_prompt,
                                 response_mime_type="application/json",
-                                response_schema=Question,
                                 temperature=0.7,
                                 max_output_tokens=500,
                             ),
@@ -115,7 +114,22 @@ Respond with JSON matching this exact format:
                     timeout=15.0  # 15 second timeout
                 )
                 
-                raw_json = response.text
+                # Debug logging
+                logger.info(f"Response object type: {type(response)}")
+                logger.info(f"Response has text attr: {hasattr(response, 'text')}")
+                
+                raw_json = response.text if hasattr(response, 'text') and response.text else None
+                
+                if not raw_json:
+                    logger.error(f"Empty or no response.text from Gemini for {subject}/{topic}/{difficulty}")
+                    logger.error(f"Response attributes: {dir(response)}")
+                    # Check if there are candidates with content
+                    if hasattr(response, 'candidates') and response.candidates:
+                        logger.info(f"Response has {len(response.candidates)} candidates")
+                        for i, candidate in enumerate(response.candidates):
+                            logger.info(f"Candidate {i}: {candidate}")
+                    raise ValueError("Empty response from Gemini - response.text is None or empty")
+                
                 logger.info(f"Generated question JSON: {raw_json}")
             except asyncio.TimeoutError:
                 logger.error(f"Gemini API timeout after 15 seconds for {subject}/{topic}/{difficulty}")
