@@ -371,3 +371,108 @@ async def get_user_skills(user_id: str):
     """Get all skills for a specific user"""
     skills = storage.get_all_user_skills(user_id)
     return {"user_id": user_id, "skills": skills}
+
+
+@app.get("/api/learning-path/recommendations", tags=["Learning Path"])
+async def get_learning_recommendations(user_id: Optional[str] = None):
+    """Generate AI-powered learning recommendations based on quiz performance"""
+    
+    if not user_id:
+        user_sessions = list(storage.sessions.values())
+    else:
+        user_sessions = [s for s in storage.sessions.values() if s.get("user_id") == user_id]
+    
+    if not user_sessions:
+        return {
+            "has_data": False,
+            "message": "No quiz data available. Complete a quiz to get personalized recommendations!",
+            "recommendations": [],
+            "learning_resources": []
+        }
+    
+    all_attempts = []
+    subject_performance = {}
+    
+    for session in user_sessions:
+        subject = session["subject"]
+        session_attempts = storage.get_attempts(session["session_id"])
+        all_attempts.extend(session_attempts)
+        
+        if subject not in subject_performance:
+            subject_performance[subject] = {
+                "total": 0,
+                "correct": 0,
+                "topics": {}
+            }
+        
+        for attempt in session_attempts:
+            topic = attempt.get("topic", "General")
+            subject_performance[subject]["total"] += 1
+            if attempt.get("is_correct"):
+                subject_performance[subject]["correct"] += 1
+            
+            if topic not in subject_performance[subject]["topics"]:
+                subject_performance[subject]["topics"][topic] = {"total": 0, "correct": 0}
+            subject_performance[subject]["topics"][topic]["total"] += 1
+            if attempt.get("is_correct"):
+                subject_performance[subject]["topics"][topic]["correct"] += 1
+    
+    weak_areas = []
+    for subject, perf in subject_performance.items():
+        accuracy = (perf["correct"] / perf["total"] * 100) if perf["total"] > 0 else 0
+        
+        for topic, topic_perf in perf["topics"].items():
+            topic_accuracy = (topic_perf["correct"] / topic_perf["total"] * 100) if topic_perf["total"] > 0 else 0
+            if topic_accuracy < 60:
+                weak_areas.append({
+                    "subject": subject,
+                    "topic": topic,
+                    "accuracy": round(topic_accuracy, 1),
+                    "questions_attempted": topic_perf["total"]
+                })
+    
+    weak_areas.sort(key=lambda x: x["accuracy"])
+    
+    prompt = f"""Based on a student's quiz performance, provide personalized learning recommendations.
+
+Performance Data:
+"""
+    
+    for area in weak_areas[:5]:
+        prompt += f"- {area['subject']} - {area['topic']}: {area['accuracy']}% accuracy ({area['questions_attempted']} questions)\n"
+    
+    prompt += """
+Please provide:
+1. A brief overall assessment (2-3 sentences)
+2. Top 3 specific areas to focus on with actionable study tips
+3. Recommended study approach
+
+Keep the response concise and encouraging."""
+    
+    try:
+        ai_recommendations = await question_generator.generate_recommendations(prompt)
+    except Exception as e:
+        ai_recommendations = "Unable to generate AI recommendations at this time."
+    
+    learning_resources = []
+    for area in weak_areas[:3]:
+        search_query = f"{area['subject']} {area['topic']} tutorial learn study guide"
+        learning_resources.append({
+            "subject": area["subject"],
+            "topic": area["topic"],
+            "accuracy": area["accuracy"],
+            "title": f"Learn {area['subject']}: {area['topic']}",
+            "description": f"Improve your understanding of {area['topic']} in {area['subject']} (Current: {area['accuracy']}% accuracy)",
+            "search_url": f"https://www.google.com/search?q={search_query.replace(' ', '+')}",
+            "khan_academy_url": f"https://www.khanacademy.org/search?page_search_query={search_query.replace(' ', '+')}",
+            "youtube_url": f"https://www.youtube.com/results?search_query={search_query.replace(' ', '+')}"
+        })
+    
+    return {
+        "has_data": True,
+        "ai_recommendations": ai_recommendations,
+        "weak_areas": weak_areas[:5],
+        "learning_resources": learning_resources,
+        "total_quizzes": len(user_sessions),
+        "total_questions": len(all_attempts)
+    }

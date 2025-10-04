@@ -157,6 +157,29 @@ Respond with JSON matching this exact format:
         import random
         topics = topic_map.get(subject, {}).get(difficulty, [f"{subject} General"])
         return random.choice(topics)
+    
+    async def generate_recommendations(self, prompt: str) -> str:
+        """
+        Generate personalized learning recommendations using Gemini AI.
+        
+        Args:
+            prompt: The prompt containing performance data and request for recommendations
+        
+        Returns:
+            AI-generated recommendations as text
+        """
+        try:
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=[
+                    types.Content(role="user", parts=[types.Part(text=prompt)])
+                ],
+            )
+            
+            return response.text.strip()
+        except Exception as e:
+            logger.error(f"Failed to generate recommendations: {e}")
+            return "Unable to generate personalized recommendations at this time. Please try again later."
 
 
 question_generator = QuestionGenerator()

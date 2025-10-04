@@ -75,6 +75,15 @@ class ApiService {
     if (!response.ok) throw new Error('Failed to get analytics');
     return response.json();
   }
+
+  async getLearningRecommendations(userId = null) {
+    const url = userId 
+      ? `${API_BASE_URL}/api/learning-path/recommendations?user_id=${userId}`
+      : `${API_BASE_URL}/api/learning-path/recommendations`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to get recommendations');
+    return response.json();
+  }
 }
 
 export default new ApiService();
