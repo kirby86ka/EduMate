@@ -5,6 +5,7 @@ import asyncio
 from typing import Dict, Any, List, Optional
 from google import genai
 from google.genai import types
+from google.genai.errors import ClientError
 from pydantic import BaseModel
 
 # IMPORTANT: KEEP THIS COMMENT
@@ -35,6 +36,69 @@ class QuestionGenerator:
     
     def __init__(self):
         self.client = client
+        self.max_retries = 3
+        self.base_delay = 2  # Base delay in seconds
+    
+    async def _call_with_retry(self, func, *args, **kwargs):
+        """
+        Call a function with exponential backoff retry logic for transient errors.
+        Performs 1 initial attempt + max_retries retry attempts.
+        
+        Args:
+            func: The function to call
+            *args: Positional arguments for the function
+            **kwargs: Keyword arguments for the function
+        
+        Returns:
+            The result of the function call
+        
+        Raises:
+            Exception: If all retries are exhausted
+        """
+        last_exception = None
+        total_attempts = self.max_retries + 1  # Initial attempt + retries
+        
+        for attempt in range(total_attempts):
+            try:
+                loop = asyncio.get_event_loop()
+                result = await loop.run_in_executor(None, lambda: func(*args, **kwargs))
+                return result
+            except ClientError as e:
+                last_exception = e
+                error_message = str(e)
+                
+                # Check if it's a transient error (503, 429, or network issues)
+                is_transient = (
+                    '503' in error_message or 
+                    '429' in error_message or 
+                    'UNAVAILABLE' in error_message or
+                    'overloaded' in error_message.lower() or
+                    'RESOURCE_EXHAUSTED' in error_message
+                )
+                
+                if not is_transient:
+                    # Not a transient error, fail immediately
+                    logger.error(f"Non-transient error: {e}")
+                    raise
+                
+                if attempt < total_attempts - 1:
+                    # Calculate exponential backoff delay
+                    delay = self.base_delay * (2 ** attempt)
+                    retry_num = attempt + 1
+                    logger.warning(f"Transient error: {error_message}. Retry {retry_num}/{self.max_retries} in {delay}s...")
+                    await asyncio.sleep(delay)
+                else:
+                    logger.error(f"All {self.max_retries} retry attempts exhausted")
+                    raise Exception(f"Failed after {self.max_retries} retries. Last error: {error_message}")
+            except Exception as e:
+                # Non-ClientError exceptions (parsing errors, etc.)
+                logger.error(f"Non-retryable error: {e}")
+                raise
+        
+        # Should never reach here, but just in case
+        if last_exception:
+            raise last_exception
+        raise Exception("Failed to call Gemini API after retries")
     
     async def generate_question(
         self, 
@@ -92,20 +156,17 @@ Respond with JSON matching this exact format:
 }}
 {previous_context}"""
 
-            # Run Gemini API call in thread pool (no timeout)
-            loop = asyncio.get_event_loop()
-            response = await loop.run_in_executor(
-                None,
-                lambda: self.client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=[
-                        types.Content(role="user", parts=[types.Part(text=f"Generate a {difficulty} question about {topic} in {subject}.")])
-                    ],
-                    config=types.GenerateContentConfig(
-                        system_instruction=system_prompt,
-                        response_mime_type="application/json",
-                        temperature=0.7,
-                    ),
+            # Run Gemini API call with retry logic for transient errors
+            response = await self._call_with_retry(
+                self.client.models.generate_content,
+                model="gemini-2.5-flash",
+                contents=[
+                    types.Content(role="user", parts=[types.Part(text=f"Generate a {difficulty} question about {topic} in {subject}.")])
+                ],
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    response_mime_type="application/json",
+                    temperature=0.7,
                 )
             )
             
@@ -216,11 +277,12 @@ Respond with JSON matching this exact format:
             AI-generated recommendations as text
         """
         try:
-            response = self.client.models.generate_content(
+            response = await self._call_with_retry(
+                self.client.models.generate_content,
                 model="gemini-2.5-flash",
                 contents=[
                     types.Content(role="user", parts=[types.Part(text=prompt)])
-                ],
+                ]
             )
             
             return response.text.strip() if response.text else "Unable to generate recommendations at this time."
