@@ -107,7 +107,6 @@ Respond with JSON matching this exact format:
                                 system_instruction=system_prompt,
                                 response_mime_type="application/json",
                                 temperature=0.7,
-                                max_output_tokens=500,
                             ),
                         )
                     ),
