@@ -82,13 +82,15 @@ Preferred communication style: Simple, everyday language.
   - Application metadata
 
 ### Analytics & Reporting
-- **Power BI Integration**: Dedicated endpoint (`/api/powerbi/analytics`) providing:
-  - Overall performance metrics (total sessions, attempts, accuracy)
-  - Subject-level performance analysis
-  - Topic-wise mastery scores and learner distribution
-  - Difficulty-based success rates
-  - Time-series data for temporal analysis
-  - Aggregated data ready for Power BI dashboard consumption
+- **Custom Analytics Dashboard**: Built with shadcn/ui components and Recharts visualization
+  - Subject-specific analytics via `/api/analytics/subject/{subject}` endpoint
+  - Three subject tabs (Maths, Science, Python) with lazy-loading data
+  - Growth charts showing accuracy progression over question attempts
+  - Question history with topics, difficulty levels, and results
+  - Bayesian mastery estimates with color-coded proficiency indicators (Proficient ≥70%, Developing ≥40%, Beginner <40%)
+  - Real-time data aggregation from assessment sessions and attempts
+  - Empty state handling for subjects with no quiz data
+- **Legacy Power BI endpoint**: `/api/powerbi/analytics` still available for external integrations
 
 ## External Dependencies
 
@@ -113,12 +115,20 @@ Preferred communication style: Simple, everyday language.
 ### Frontend Application
 - **Framework**: React 19 with Vite and React Router
 - **UI Library**: shadcn/ui components with Tailwind CSS
+- **Charting**: Recharts for data visualization
 - **Port**: Runs on port 5000 (Replit webview requirement)
 - **Pages**:
   - **Home**: Welcome page with three action cards (Adaptive Learning, Skill Mastery, Personalized Path)
   - **Subjects**: Choose from Maths, Science, or Python to start a quiz
-  - **Quiz**: Interactive assessment with real-time feedback and difficulty adaptation
-  - **Dashboard**: Power BI analytics dashboard integration
+  - **Quiz**: Interactive 10-question assessment with real-time feedback and difficulty adaptation
+    - Detailed results screen with score (X/10), percentage, and question-by-question breakdown
+    - Green/red color coding for correct/incorrect answers
+    - Topics displayed for each question
+  - **Dashboard**: Custom analytics dashboard with subject-specific views
+    - Tabbed interface for Maths, Science, and Python
+    - Growth chart showing accuracy trends over questions
+    - Question history with topics and difficulty levels
+    - Bayesian mastery estimate with color-coded proficiency levels
   - **Personalized Path**: Gemini AI recommendations and learning resources
 - **Navigation**: Clean header with Home, Subjects, and Dashboard links
 - **Styling**: Modern gradient design with shadcn/ui components
