@@ -116,9 +116,19 @@ Preferred communication style: Simple, everyday language.
 - **Framework**: React 19 with Vite and React Router
 - **UI Library**: shadcn/ui components with Tailwind CSS
 - **Charting**: Recharts for data visualization
+- **Markdown/LaTeX**: react-markdown with remark-math, remark-gfm, and rehype-katex for rendering AI content
 - **Port**: Runs on port 5000 (Replit webview requirement)
+- **Theme**: Dark theme with white text on black background using CSS custom properties
+  - Background: Pure black (#000000)
+  - Foreground text: White (#FFFFFF)
+  - Muted text: Gray (#A1A1AA)
+  - Accent colors: Purple primary, green/red for correctness indicators
+  - Consistent use of `bg-background`, `text-foreground`, `border-border` classes
 - **Pages**:
   - **Home**: Welcome page with three action cards (Adaptive Learning, Skill Mastery, Personalized Path)
+    - Brain icon in navigation header next to AdaptLearn logo
+    - Last Quiz Results section showing recent quiz performance with link to Dashboard
+    - Backend endpoint: `/api/learning-path/last-quiz`
   - **Subjects**: Choose from Maths, Science, or Python to start a quiz
   - **Quiz**: Interactive 10-question assessment with real-time feedback and difficulty adaptation
     - Detailed results screen with score (X/10), percentage, and question-by-question breakdown
@@ -129,8 +139,12 @@ Preferred communication style: Simple, everyday language.
     - Growth chart showing accuracy trends over questions
     - Question history with topics and difficulty levels
     - Bayesian mastery estimate with color-coded proficiency levels
-  - **Personalized Path**: Gemini AI recommendations and learning resources
-- **Navigation**: Clean header with Home, Subjects, and Dashboard links
-- **Styling**: Modern gradient design with shadcn/ui components
+  - **Personalized Path**: Subject-specific AI-powered learning recommendations
+    - Tabbed interface for Maths, Science, and Python
+    - Markdown and LaTeX rendering for AI-generated content
+    - Backend endpoint: `/api/learning-path/recommendations/{subject}`
+    - Displays personalized study materials, topics to review, and resource links
+- **Navigation**: Clean header with brain icon, AdaptLearn logo, Home, Subjects, and Dashboard links
+- **Styling**: Dark theme with shadcn/ui components and consistent color palette
 - **API Integration**: Connects to FastAPI backend on port 8000
 - **Location**: `/frontend` directory
