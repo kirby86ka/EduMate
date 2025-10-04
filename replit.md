@@ -8,6 +8,13 @@ This is a FastAPI-based adaptive learning backend that implements Bayesian Knowl
 
 Preferred communication style: Simple, everyday language.
 
+## Documentation
+
+Complete documentation available in:
+- **README.md**: Comprehensive project overview, installation, API docs, and deployment guide
+- **CONTRIBUTING.md**: Guidelines for contributing to the project
+- **LICENSE**: MIT License
+
 ## System Architecture
 
 ### Core Technology Stack
