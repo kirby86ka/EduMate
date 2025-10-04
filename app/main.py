@@ -137,6 +137,7 @@ async def get_next_question(request: NextQuestionRequest):
         )
         
         storage.add_question_to_history(request.session_id, question_data["question"])
+        storage.store_current_question(request.session_id, question_data)
         
         return NextQuestionResponse(
             session_id=request.session_id,
@@ -176,40 +177,27 @@ async def submit_answer(submission: AnswerSubmission):
             detail="Session is not active"
         )
     
-    current_difficulty = session["current_difficulty"]
-    topic = submission.topic if hasattr(submission, 'topic') else "General"
+    current_question = storage.get_current_question(submission.session_id)
     
-    previous_questions = storage.get_question_history(submission.session_id)
-    if len(previous_questions) == 0:
+    if not current_question:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No question has been asked yet"
         )
     
-    last_question = previous_questions[-1]
-    
-    try:
-        question_data = await question_generator.generate_question(
-            subject=session["subject"],
-            topic=topic,
-            difficulty=current_difficulty,
-            previous_questions=previous_questions[-1:]
-        )
-        correct_answer = question_data["correct_answer"]
-        explanation = question_data.get("explanation", "")
-        
-    except:
-        correct_answer = "A"
-        explanation = "Unable to verify answer at this time."
+    correct_answer = current_question["correct_answer"]
+    explanation = current_question.get("explanation", "")
+    topic = current_question.get("topic", submission.topic if submission.topic else "General")
+    current_difficulty = current_question.get("difficulty", session["current_difficulty"])
     
     is_correct = submission.selected_answer.upper() == correct_answer
     
     attempt_data = storage.add_attempt(submission.session_id, {
-        "question": last_question,
+        "question": current_question["question"],
         "selected_answer": submission.selected_answer.upper(),
         "correct_answer": correct_answer,
         "is_correct": is_correct,
-        "time_spent": submission.time_spent if hasattr(submission, 'time_spent') else 0,
+        "time_spent": submission.time_spent if submission.time_spent else 0,
         "topic": topic,
         "difficulty": current_difficulty
     })
@@ -283,11 +271,12 @@ async def complete_assessment(session_id: str):
     strong_topics = []
     
     for topic, perf in topic_performance.items():
-        topic_accuracy = (perf["correct"] / perf["total"] * 100) if perf["total"] > 0 else 0
-        if topic_accuracy < 60:
-            weak_topics.append(topic)
-        elif topic_accuracy >= 80:
-            strong_topics.append(topic)
+        if topic and topic != "None":
+            topic_accuracy = (perf["correct"] / perf["total"] * 100) if perf["total"] > 0 else 0
+            if topic_accuracy < 60:
+                weak_topics.append(topic)
+            elif topic_accuracy >= 80:
+                strong_topics.append(topic)
     
     return AssessmentComplete(
         session_id=session_id,

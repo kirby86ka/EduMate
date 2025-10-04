@@ -41,9 +41,9 @@ class Question(BaseModel):
 
 class AnswerSubmission(BaseModel):
     session_id: str
-    question_id: str
     selected_answer: str  
-    time_taken_seconds: Optional[int] = None
+    time_spent: Optional[int] = None
+    topic: Optional[str] = None
 
 
 class AssessmentSession(BaseModel):
