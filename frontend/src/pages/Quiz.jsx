@@ -244,28 +244,28 @@ export default function Quiz() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8">
+    <div className="min-h-screen bg-background py-4 sm:py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
-          <div className="mb-6 flex justify-between items-center">
-            <div className="flex gap-2">
-              <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
+          <div className="mb-4 sm:mb-6 flex flex-wrap justify-between items-center gap-2 animate-slide-in">
+            <div className="flex gap-2 flex-wrap">
+              <span className="px-2 sm:px-3 py-1 bg-primary/10 text-primary rounded-full text-xs sm:text-sm font-medium">
                 {subject}
               </span>
-              <span className="px-3 py-1 bg-secondary text-foreground rounded-full text-sm font-medium">
+              <span className="px-2 sm:px-3 py-1 bg-secondary text-foreground rounded-full text-xs sm:text-sm font-medium">
                 Question {questionsAnswered + 1}/{TOTAL_QUESTIONS}
               </span>
-              <span className="px-3 py-1 bg-accent text-foreground rounded-full text-sm font-medium">
+              <span className="px-2 sm:px-3 py-1 bg-accent text-foreground rounded-full text-xs sm:text-sm font-medium">
                 {question.current_difficulty}
               </span>
             </div>
           </div>
 
-          <Card className="border-border bg-card">
+          <Card className="border-border bg-card animate-scale-in hover-lift">
             <CardHeader>
-              <CardTitle className="text-xl text-foreground">{question.question}</CardTitle>
+              <CardTitle className="text-lg sm:text-xl text-foreground">{question.question}</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2 sm:space-y-3">
               {['A', 'B', 'C', 'D'].map((option) => {
                 const optionKey = `option_${option.toLowerCase()}`
                 const optionText = question[optionKey]
@@ -291,12 +291,12 @@ export default function Quiz() {
                   <Button
                     key={option}
                     variant={buttonVariant}
-                    className={`w-full justify-start text-left h-auto py-3 px-4 ${extraClasses}`}
+                    className={`w-full justify-start text-left h-auto py-2 sm:py-3 px-3 sm:px-4 ${extraClasses} transition-smooth hover:scale-102`}
                     onClick={() => !showFeedback && setSelectedAnswer(option)}
                     disabled={showFeedback}
                   >
-                    <span className="font-semibold mr-3">{option})</span>
-                    <span>{optionText}</span>
+                    <span className="font-semibold mr-2 sm:mr-3 text-sm sm:text-base">{option})</span>
+                    <span className="text-sm sm:text-base">{optionText}</span>
                   </Button>
                 )
               })}

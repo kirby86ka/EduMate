@@ -37,28 +37,36 @@ export default function Subjects() {
   
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4 text-foreground">Choose Your Subject</h1>
-          <p className="text-muted-foreground">
+      <div className="container mx-auto px-4 py-8 sm:py-16">
+        <div className="text-center mb-8 sm:mb-12 animate-slide-up">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-4 text-foreground">Choose Your Subject</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Select a subject to begin your adaptive assessment
           </p>
         </div>
         
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {subjects.map((subject) => (
-            <Card key={subject.id} className="hover:shadow-xl transition-all border-border bg-card">
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
+          {subjects.map((subject, index) => (
+            <Card 
+              key={subject.id} 
+              className="hover-lift border-border bg-card animate-scale-in cursor-pointer group"
+              style={{ animationDelay: `${index * 0.1}s` }}
+              onClick={() => handleStartQuiz(subject.id)}
+            >
               <CardHeader>
-                <div className={`w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br ${subject.color} flex items-center justify-center text-white`}>
+                <div className={`w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 rounded-full bg-gradient-to-br ${subject.color} flex items-center justify-center text-white transition-smooth group-hover:scale-110 group-hover:rotate-6`}>
                   {subject.icon}
                 </div>
-                <CardTitle className="text-center text-2xl text-foreground">{subject.name}</CardTitle>
+                <CardTitle className="text-center text-xl sm:text-2xl text-foreground">{subject.name}</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
-                <p className="text-muted-foreground mb-6">{subject.description}</p>
+                <p className="text-sm sm:text-base text-muted-foreground mb-6">{subject.description}</p>
                 <Button 
-                  className="w-full" 
-                  onClick={() => handleStartQuiz(subject.id)}
+                  className="w-full transition-smooth hover:scale-105" 
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleStartQuiz(subject.id)
+                  }}
                 >
                   Start Quiz
                 </Button>

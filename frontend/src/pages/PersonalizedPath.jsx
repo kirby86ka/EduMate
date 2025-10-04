@@ -79,23 +79,23 @@ export default function PersonalizedPath() {
     }
     
     return (
-      <div className="space-y-6">
-        <div className="text-muted-foreground text-sm">
+      <div className="space-y-4 sm:space-y-6 animate-fade-in">
+        <div className="text-muted-foreground text-xs sm:text-sm">
           Based on {subjectData.total_quizzes} quiz{subjectData.total_quizzes !== 1 ? 'zes' : ''} and {subjectData.total_questions} question{subjectData.total_questions !== 1 ? 's' : ''}
         </div>
 
-        <Card className="bg-card border-border">
+        <Card className="bg-card border-border hover-lift">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               AI Recommendations for {subject}
             </CardTitle>
-            <CardDescription className="text-muted-foreground">
+            <CardDescription className="text-muted-foreground text-xs sm:text-sm">
               Personalized insights from Gemini AI based on your {subject} quiz performance
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="p-4 bg-secondary/50 rounded-lg border border-border">
+            <div className="p-3 sm:p-4 bg-secondary/50 rounded-lg border border-border">
               <div className="markdown-content text-foreground">
                 <ReactMarkdown
                   remarkPlugins={[remarkMath, remarkGfm]}
@@ -213,22 +213,22 @@ export default function PersonalizedPath() {
   }
   
   return (
-    <div className="min-h-screen bg-background py-8">
+    <div className="min-h-screen bg-background py-4 sm:py-8">
       <div className="container mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 text-foreground">Learning Recommendations</h1>
-          <p className="text-muted-foreground">
+        <div className="mb-6 sm:mb-8 animate-slide-up">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-foreground">Learning Recommendations</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             AI-powered recommendations tailored to your learning journey
           </p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6 bg-secondary">
+          <TabsList className="grid w-full grid-cols-3 mb-4 sm:mb-6 bg-secondary animate-fade-in">
             {subjects.map((subject) => (
               <TabsTrigger 
                 key={subject} 
                 value={subject}
-                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-smooth text-xs sm:text-sm"
               >
                 {subject}
               </TabsTrigger>
