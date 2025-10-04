@@ -3,7 +3,9 @@ const getApiBaseUrl = () => {
     return 'http://localhost:8000';
   }
   if (window.location.hostname.includes('replit') || window.location.hostname.includes('repl.co')) {
-    return `${window.location.protocol}//${window.location.hostname}:8000`;
+    if (window.location.port === '5000') {
+      return `${window.location.protocol}//${window.location.hostname}:8000`;
+    }
   }
   return '';
 };
