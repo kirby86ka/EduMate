@@ -41,3 +41,39 @@ firebase-credentials.json
 node_modules
 frontend/dist
 frontend/node_modules
+
+# Secrets and API Keys
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*secret*
+*SECRET*
+*credentials*
+*CREDENTIALS*
+api_keys.txt
+secrets.json
+.secrets
+.replit
+
+# Replit-specific
+.config/
+.upm/
+replit.nix
+
+# Firebase
+firebase-credentials.json
+serviceAccountKey.json
+
+# AWS
+.aws/
+aws-credentials.json
+
+# Google Cloud
+gcloud-credentials.json
+google-credentials.json
+
+# API Keys and Tokens
+*.token
+.api-key
