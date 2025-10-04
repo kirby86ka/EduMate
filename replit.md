@@ -12,13 +12,16 @@ Preferred communication style: Simple, everyday language.
 
 ### Core Technology Stack
 - **Backend Framework**: FastAPI (Python) with async/await for high-performance API endpoints
-- **Database**: Firebase Firestore
-  - NoSQL document database with real-time capabilities
-  - Google Cloud infrastructure for scalability and reliability
-  - firebase-admin SDK for Python integration
-  - Service account authentication
+- **AI Engine**: Google Gemini 2.5 Flash for dynamic question generation
+  - Real-time question generation based on subject, topic, and difficulty
+  - Structured JSON output for consistent question format
+  - Adaptive difficulty progression using BKT model
+- **Storage**: In-memory storage for session tracking and user progress
+  - Fast performance for real-time assessments
+  - Session management with UUID-based IDs
+  - User skill tracking per topic/subject
 - **API Documentation**: Auto-generated OpenAPI/Swagger docs via FastAPI
-- **CORS**: Configured for `http://localhost:3000` frontend integration
+- **CORS**: Configured to allow all hosts for Replit deployment
 
 ### Authentication & Security
 - **API Key Authentication**: Two-tier system using header-based keys
@@ -59,13 +62,14 @@ Preferred communication style: Simple, everyday language.
 - **Admin Routes**: Protected CRUD operations for question management
 - **AI Integration Routes**: Endpoints for AI agents to interact with system
 
-### Database Schema Design
-- **Collections** (Firestore):
-  - `questions`: Question bank with metadata (subject, topic, difficulty)
-  - `sessions`: Active and historical assessment sessions
+### Storage Design
+- **In-Memory Storage**:
+  - `sessions`: Active and historical assessment sessions with UUID keys
   - `attempts`: Question attempt history linked to sessions
   - `user_skills`: Mastery tracking per user/topic/subject
-- **ID Strategy**: Firestore auto-generated document IDs or custom string IDs
+  - `question_history`: Track asked questions to avoid duplicates
+- **Data Persistence**: All data stored in-memory during runtime (resets on restart)
+- **ID Strategy**: UUID-based session and attempt IDs
 
 ### Configuration Management
 - **Environment-based Settings**: Pydantic Settings for type-safe configuration
@@ -87,15 +91,14 @@ Preferred communication style: Simple, everyday language.
 ## External Dependencies
 
 ### Required Services
-- **Firebase Firestore**: NoSQL cloud database
-  - Requires Firebase project setup
-  - Service account credentials for authentication
-  - Collections: questions, sessions, attempts, user_skills
-  - Real-time data synchronization capabilities
+- **Google Gemini AI**: LLM service for question generation
+  - Requires Gemini API key from Google AI Studio
+  - Uses gemini-2.5-flash model for fast question generation
+  - Structured JSON output with Pydantic validation
 
 ### Python Packages
 - **FastAPI**: Web framework for building APIs
-- **firebase-admin**: Official Firebase Admin SDK for Python
+- **google-genai**: Official Google Gemini SDK for Python
 - **Pydantic**: Data validation and settings management
 - **Pydantic-settings**: Environment variable configuration
 - **Uvicorn**: ASGI server for running FastAPI
