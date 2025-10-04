@@ -106,8 +106,8 @@ export default function Quiz() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-2xl">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-full max-w-2xl border-border bg-card">
           <CardContent className="p-8 text-center">
             <p className="text-red-500">{error}</p>
             <Button onClick={() => navigate('/subjects')} className="mt-4">
@@ -124,13 +124,13 @@ export default function Quiz() {
     const percentCorrect = Math.round((totalCorrect / TOTAL_QUESTIONS) * 100)
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-8">
+      <div className="min-h-screen bg-background py-8">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-4xl font-bold text-center mb-8">Quiz Complete!</h1>
+            <h1 className="text-4xl font-bold text-center mb-8 text-foreground">Quiz Complete!</h1>
             
             <div className="grid md:grid-cols-2 gap-6 mb-8">
-              <Card>
+              <Card className="border-border bg-card">
                 <CardContent className="p-6 text-center">
                   <div className="text-5xl font-bold text-primary mb-2">
                     {totalCorrect}/{TOTAL_QUESTIONS}
@@ -139,7 +139,7 @@ export default function Quiz() {
                 </CardContent>
               </Card>
               
-              <Card>
+              <Card className="border-border bg-card">
                 <CardContent className="p-6 text-center">
                   <div className="text-5xl font-bold text-primary mb-2">
                     {percentCorrect}%
@@ -149,9 +149,9 @@ export default function Quiz() {
               </Card>
             </div>
 
-            <Card>
+            <Card className="border-border bg-card">
               <CardHeader>
-                <CardTitle>Question Breakdown</CardTitle>
+                <CardTitle className="text-foreground">Question Breakdown</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -160,33 +160,33 @@ export default function Quiz() {
                       key={index}
                       className={`p-4 rounded-lg border-2 ${
                         attempt.is_correct 
-                          ? 'border-green-200 bg-green-50' 
-                          : 'border-red-200 bg-red-50'
+                          ? 'border-green-500/50 bg-green-500/10' 
+                          : 'border-red-500/50 bg-red-500/10'
                       }`}
                     >
                       <div className="flex items-start gap-3">
                         {attempt.is_correct ? (
-                          <CheckCircle2 className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
+                          <CheckCircle2 className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
                         ) : (
-                          <XCircle className="w-5 h-5 text-red-600 mt-1 flex-shrink-0" />
+                          <XCircle className="w-5 h-5 text-red-500 mt-1 flex-shrink-0" />
                         )}
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="font-semibold">Question {index + 1}</span>
-                            <span className="px-2 py-1 bg-white rounded text-xs font-medium">
+                            <span className="font-semibold text-foreground">Question {index + 1}</span>
+                            <span className="px-2 py-1 bg-secondary rounded text-xs font-medium text-foreground">
                               {attempt.topic}
                             </span>
                           </div>
-                          <p className="text-sm mb-2">{attempt.question}</p>
+                          <p className="text-sm mb-2 text-foreground">{attempt.question}</p>
                           <div className="flex gap-4 text-sm">
-                            <span>
-                              Your answer: <span className={attempt.is_correct ? 'text-green-700 font-medium' : 'text-red-700 font-medium'}>
+                            <span className="text-foreground">
+                              Your answer: <span className={attempt.is_correct ? 'text-green-500 font-medium' : 'text-red-500 font-medium'}>
                                 {attempt.selected_answer}
                               </span>
                             </span>
                             {!attempt.is_correct && (
-                              <span>
-                                Correct: <span className="text-green-700 font-medium">
+                              <span className="text-foreground">
+                                Correct: <span className="text-green-500 font-medium">
                                   {attempt.correct_answer}
                                 </span>
                               </span>
@@ -208,6 +208,7 @@ export default function Quiz() {
                 onClick={() => window.location.reload()} 
                 variant="outline"
                 size="lg"
+                className="border-border"
               >
                 Retake Quiz
               </Button>
@@ -220,8 +221,8 @@ export default function Quiz() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-2xl">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-full max-w-2xl border-border bg-card">
           <CardContent className="p-8 text-center">
             <p className="text-muted-foreground">Loading question...</p>
           </CardContent>
@@ -232,8 +233,8 @@ export default function Quiz() {
 
   if (!question) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-2xl">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-full max-w-2xl border-border bg-card">
           <CardContent className="p-8 text-center">
             <p className="text-muted-foreground">No questions available</p>
           </CardContent>
@@ -243,7 +244,7 @@ export default function Quiz() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
           <div className="mb-6 flex justify-between items-center">
@@ -251,18 +252,18 @@ export default function Quiz() {
               <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
                 {subject}
               </span>
-              <span className="px-3 py-1 bg-secondary rounded-full text-sm font-medium">
+              <span className="px-3 py-1 bg-secondary text-foreground rounded-full text-sm font-medium">
                 Question {questionsAnswered + 1}/{TOTAL_QUESTIONS}
               </span>
-              <span className="px-3 py-1 bg-accent rounded-full text-sm font-medium">
+              <span className="px-3 py-1 bg-accent text-foreground rounded-full text-sm font-medium">
                 {question.current_difficulty}
               </span>
             </div>
           </div>
 
-          <Card>
+          <Card className="border-border bg-card">
             <CardHeader>
-              <CardTitle className="text-xl">{question.question}</CardTitle>
+              <CardTitle className="text-xl text-foreground">{question.question}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {['A', 'B', 'C', 'D'].map((option) => {
@@ -272,7 +273,7 @@ export default function Quiz() {
                 if (!optionText) return null
 
                 let buttonVariant = "outline"
-                let extraClasses = ""
+                let extraClasses = "border-border"
                 
                 if (selectedAnswer === option) {
                   buttonVariant = "secondary"
@@ -280,9 +281,9 @@ export default function Quiz() {
                 
                 if (showFeedback && feedback) {
                   if (option === feedback.correct_answer) {
-                    extraClasses = "border-green-500 bg-green-50"
+                    extraClasses = "border-green-500 bg-green-500/10"
                   } else if (option === selectedAnswer) {
-                    extraClasses = "border-red-500 bg-red-50"
+                    extraClasses = "border-red-500 bg-red-500/10"
                   }
                 }
 
@@ -317,7 +318,7 @@ export default function Quiz() {
 
           {showFeedback && feedback && (
             <div className="mt-6 space-y-4">
-              <Card className={feedback.is_correct ? 'border-green-500' : 'border-red-500'}>
+              <Card className={`border-border bg-card ${feedback.is_correct ? 'border-green-500' : 'border-red-500'}`}>
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3 mb-3">
                     {feedback.is_correct ? (
@@ -325,7 +326,7 @@ export default function Quiz() {
                     ) : (
                       <XCircle className="w-6 h-6 text-red-500" />
                     )}
-                    <span className="text-lg font-semibold">
+                    <span className="text-lg font-semibold text-foreground">
                       {feedback.is_correct ? 'Correct!' : 'Incorrect'}
                     </span>
                   </div>

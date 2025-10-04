@@ -56,35 +56,35 @@ export default function Dashboard() {
 
     const masteryPercent = (data.mastery_estimate * 100).toFixed(1)
     const masteryColor = 
-      data.mastery_estimate >= 0.7 ? 'text-green-600' :
-      data.mastery_estimate >= 0.4 ? 'text-yellow-600' :
-      'text-red-600'
+      data.mastery_estimate >= 0.7 ? 'text-green-500' :
+      data.mastery_estimate >= 0.4 ? 'text-yellow-500' :
+      'text-red-500'
 
     return (
       <div className="space-y-6">
         <div className="grid md:grid-cols-3 gap-6">
-          <Card>
+          <Card className="border-border bg-card">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Questions</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{data.total_questions}</div>
+              <div className="text-3xl font-bold text-foreground">{data.total_questions}</div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-border bg-card">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">Accuracy</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{data.accuracy}%</div>
+              <div className="text-3xl font-bold text-foreground">{data.accuracy}%</div>
               <p className="text-xs text-muted-foreground mt-1">
                 {data.correct_answers}/{data.total_questions} correct
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-border bg-card">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">Bayesian Mastery Estimate</CardTitle>
             </CardHeader>
@@ -100,9 +100,9 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        <Card>
+        <Card className="border-border bg-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-foreground">
               <TrendingUp className="w-5 h-5" />
               Growth Chart
             </CardTitle>
@@ -123,9 +123,9 @@ export default function Dashboard() {
                     content={({ active, payload }) => {
                       if (active && payload && payload.length) {
                         return (
-                          <div className="bg-white p-3 border rounded-lg shadow-lg">
-                            <p className="font-semibold">Question {payload[0].payload.question_number}</p>
-                            <p className="text-sm">
+                          <div className="bg-card p-3 border border-border rounded-lg shadow-lg">
+                            <p className="font-semibold text-foreground">Question {payload[0].payload.question_number}</p>
+                            <p className="text-sm text-foreground">
                               Correct: {payload[0].payload.correct}/{payload[0].payload.question_number}
                             </p>
                             <p className="text-sm text-primary font-semibold">
@@ -152,9 +152,9 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-border bg-card">
           <CardHeader>
-            <CardTitle>Question History</CardTitle>
+            <CardTitle className="text-foreground">Question History</CardTitle>
           </CardHeader>
           <CardContent>
             {data.question_history && data.question_history.length > 0 ? (
@@ -164,26 +164,26 @@ export default function Dashboard() {
                     key={index}
                     className={`p-4 rounded-lg border ${
                       item.is_correct 
-                        ? 'border-green-200 bg-green-50' 
-                        : 'border-red-200 bg-red-50'
+                        ? 'border-green-500/50 bg-green-500/10' 
+                        : 'border-red-500/50 bg-red-500/10'
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       {item.is_correct ? (
-                        <CheckCircle2 className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
+                        <CheckCircle2 className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
                       ) : (
-                        <XCircle className="w-5 h-5 text-red-600 mt-1 flex-shrink-0" />
+                        <XCircle className="w-5 h-5 text-red-500 mt-1 flex-shrink-0" />
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-2">
-                          <span className="px-2 py-1 bg-white rounded text-xs font-medium">
+                          <span className="px-2 py-1 bg-secondary rounded text-xs font-medium text-foreground">
                             {item.topic}
                           </span>
-                          <span className="px-2 py-1 bg-white rounded text-xs">
+                          <span className="px-2 py-1 bg-secondary rounded text-xs text-foreground">
                             {item.difficulty}
                           </span>
                         </div>
-                        <p className="text-sm break-words">{item.question}</p>
+                        <p className="text-sm break-words text-foreground">{item.question}</p>
                       </div>
                     </div>
                   </div>
@@ -199,16 +199,16 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-4xl font-bold mb-8 text-center">Analytics Dashboard</h1>
+          <h1 className="text-4xl font-bold mb-8 text-center text-foreground">Analytics Dashboard</h1>
 
           <Tabs value={selectedSubject} onValueChange={setSelectedSubject} className="w-full">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-8">
-              <TabsTrigger value="Maths">Maths</TabsTrigger>
-              <TabsTrigger value="Science">Science</TabsTrigger>
-              <TabsTrigger value="Python">Python</TabsTrigger>
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-8 bg-secondary">
+              <TabsTrigger value="Maths" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Maths</TabsTrigger>
+              <TabsTrigger value="Science" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Science</TabsTrigger>
+              <TabsTrigger value="Python" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Python</TabsTrigger>
             </TabsList>
 
             <TabsContent value="Maths">

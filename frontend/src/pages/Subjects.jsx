@@ -36,10 +36,10 @@ export default function Subjects() {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Choose Your Subject</h1>
+          <h1 className="text-4xl font-bold mb-4 text-foreground">Choose Your Subject</h1>
           <p className="text-muted-foreground">
             Select a subject to begin your adaptive assessment
           </p>
@@ -47,12 +47,12 @@ export default function Subjects() {
         
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {subjects.map((subject) => (
-            <Card key={subject.id} className="hover:shadow-xl transition-all">
+            <Card key={subject.id} className="hover:shadow-xl transition-all border-border bg-card">
               <CardHeader>
                 <div className={`w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br ${subject.color} flex items-center justify-center text-white`}>
                   {subject.icon}
                 </div>
-                <CardTitle className="text-center text-2xl">{subject.name}</CardTitle>
+                <CardTitle className="text-center text-2xl text-foreground">{subject.name}</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
                 <p className="text-muted-foreground mb-6">{subject.description}</p>
