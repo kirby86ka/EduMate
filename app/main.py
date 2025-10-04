@@ -1,7 +1,10 @@
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from typing import List, Optional
 from datetime import datetime
+from pathlib import Path
 
 from app.config import settings
 from app.models import (
@@ -27,9 +30,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+FRONTEND_BUILD_DIR = Path(__file__).parent.parent / "frontend" / "dist"
 
-@app.get("/", tags=["Health"])
-async def root():
+if FRONTEND_BUILD_DIR.exists():
+    app.mount("/assets", StaticFiles(directory=FRONTEND_BUILD_DIR / "assets"), name="assets")
+
+
+@app.get("/api/health", tags=["Health"])
+async def api_health():
     return {
         "message": "Adaptive Learning API",
         "version": settings.app_version,
@@ -522,3 +530,17 @@ async def get_last_quiz_results(user_id: Optional[str] = None):
         "started_at": last_session.get("started_at"),
         "completed_at": last_session.get("completed_at")
     }
+
+
+@app.get("/{full_path:path}")
+async def serve_frontend(full_path: str):
+    """Serve the React frontend for all non-API routes"""
+    if FRONTEND_BUILD_DIR.exists():
+        index_file = FRONTEND_BUILD_DIR / "index.html"
+        if index_file.exists():
+            return FileResponse(index_file)
+    
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Frontend not built. Run 'npm run build' in the frontend directory."
+    )
