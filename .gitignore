@@ -37,3 +37,7 @@ htmlcov/
 *.log
 .DS_Store
 firebase-credentials.json
+
+node_modules
+frontend/dist
+frontend/node_modules
