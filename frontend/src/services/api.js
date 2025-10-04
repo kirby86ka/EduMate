@@ -1,6 +1,14 @@
-const API_BASE_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:8000' 
-  : '';
+const getApiBaseUrl = () => {
+  if (window.location.hostname === 'localhost') {
+    return 'http://localhost:8000';
+  }
+  if (window.location.hostname.includes('replit') || window.location.hostname.includes('repl.co')) {
+    return `${window.location.protocol}//${window.location.hostname}:8000`;
+  }
+  return '';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const ADMIN_API_KEY = 'dev-admin-key-12345';
 
