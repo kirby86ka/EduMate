@@ -212,17 +212,23 @@ export default function Quiz() {
               </CardContent>
             </Card>
 
-            <div className="mt-8 flex gap-4 justify-center">
-              <Button onClick={() => navigate('/subjects')} size="lg">
-                Back to Subjects
+            <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+              <Button onClick={() => navigate('/dashboard')} size="lg" className="w-full sm:w-auto">
+                View Dashboard
+              </Button>
+              <Button onClick={() => navigate('/personalized-path')} size="lg" className="w-full sm:w-auto">
+                Learning Recommendations
               </Button>
               <Button 
                 onClick={() => window.location.reload()} 
                 variant="outline"
                 size="lg"
-                className="border-border"
+                className="border-border w-full sm:w-auto"
               >
                 Retake Quiz
+              </Button>
+              <Button onClick={() => navigate('/subjects')} variant="outline" size="lg" className="border-border w-full sm:w-auto">
+                Back to Subjects
               </Button>
             </div>
           </div>
