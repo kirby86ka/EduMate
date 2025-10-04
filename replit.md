@@ -106,14 +106,16 @@ Preferred communication style: Simple, everyday language.
 - **Python-dotenv**: Environment variable loading from .env files
 
 ### Frontend Application
-- **Framework**: React 19 with Vite for fast development
+- **Framework**: React 19 with Vite and React Router
+- **UI Library**: shadcn/ui components with Tailwind CSS
 - **Port**: Runs on port 5000 (Replit webview requirement)
-- **Features**:
-  - Subject selection with live question counts
-  - Adaptive assessment flow with real-time feedback
-  - Question difficulty badges and progress tracking
-  - Results dashboard with performance metrics
-  - Personalized learning path visualization
+- **Pages**:
+  - **Home**: Welcome page with three action cards (Adaptive Learning, Skill Mastery, Personalized Path)
+  - **Subjects**: Choose from Maths, Science, or Python to start a quiz
+  - **Quiz**: Interactive assessment with real-time feedback and difficulty adaptation
+  - **Dashboard**: Power BI analytics dashboard integration
+  - **Personalized Path**: Gemini AI recommendations and learning resources
+- **Navigation**: Clean header with Home, Subjects, and Dashboard links
+- **Styling**: Modern gradient design with shadcn/ui components
 - **API Integration**: Connects to FastAPI backend on port 8000
-- **Styling**: Modern gradient design with smooth animations
 - **Location**: `/frontend` directory
