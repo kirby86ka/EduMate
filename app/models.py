@@ -129,14 +129,27 @@ class NextQuestionRequest(BaseModel):
 
 
 class NextQuestionResponse(BaseModel):
-    question: Question
+    session_id: str
     question_number: int
     total_questions: int
-    can_request_more: bool
+    current_difficulty: DifficultyLevel
+    mastery_level: float
+    question: str
+    option_a: str
+    option_b: str
+    option_c: str
+    option_d: str
+    topic: str
+    subject: str
 
 
 class AssessmentComplete(BaseModel):
     session_id: str
-    total_answered: int
-    score: float
-    message: str
+    total_questions: int
+    correct_answers: int
+    accuracy: float
+    final_mastery_level: float
+    time_taken: int
+    weak_topics: List[str]
+    strong_topics: List[str]
+    recommended_resources: List[str]

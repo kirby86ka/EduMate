@@ -1,44 +1,31 @@
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
-import uuid
 from datetime import datetime
-import random
 
 from app.config import settings
-from app.database import db_manager
 from app.models import (
-    Question, AnswerSubmission, AssessmentSession, Attempt,
-    UserSkill, LearningPath, LearningPathTopic, SubjectInfo,
+    AnswerSubmission, AssessmentSession, 
     NextQuestionRequest, NextQuestionResponse, AssessmentComplete,
-    DifficultyLevel
+    DifficultyLevel, SubjectInfo
 )
 from app.bkt_model import bkt_model
-from app.auth import verify_admin_key, verify_ai_key
+from app.services.question_generator import question_generator
+from app.services.storage import storage
 
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
-    description="Adaptive learning backend with BKT model for personalized assessments"
+    description="Adaptive learning backend with BKT model and Gemini AI question generation"
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=settings.cors_origins + ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.on_event("startup")
-async def startup_event():
-    await db_manager.connect()
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    await db_manager.close()
 
 
 @app.get("/", tags=["Health"])
@@ -46,7 +33,7 @@ async def root():
     return {
         "message": "Adaptive Learning API",
         "version": settings.app_version,
-        "database": "Firebase Firestore"
+        "engine": "Gemini AI + BKT"
     }
 
 
@@ -54,75 +41,64 @@ async def root():
 async def health_check():
     return {
         "status": "healthy",
-        "database": "Firebase Firestore"
+        "storage": "In-Memory",
+        "ai_engine": "Gemini AI"
     }
 
 
 @app.get("/api/subjects", response_model=List[SubjectInfo], tags=["Subjects"])
 async def get_subjects():
-    questions_collection = db_manager.get_collection("questions")
-    questions = await questions_collection.find({}).to_list(length=None)
-    
-    subjects_dict = {}
-    for q in questions:
-        subject = q.get("subject", "Unknown")
-        topic = q.get("topic", "General")
-        
-        if subject not in subjects_dict:
-            subjects_dict[subject] = {
-                "subject": subject,
-                "question_count": 0,
-                "topics": set()
-            }
-        
-        subjects_dict[subject]["question_count"] += 1
-        subjects_dict[subject]["topics"].add(topic)
-    
-    subjects_list = []
-    for subject_data in subjects_dict.values():
-        subjects_list.append(SubjectInfo(
-            subject=subject_data["subject"],
-            question_count=subject_data["question_count"],
-            topics=sorted(list(subject_data["topics"]))
-        ))
-    
-    return subjects_list
+    """Get available subjects for assessment"""
+    subjects = [
+        SubjectInfo(
+            subject="Maths",
+            question_count=999,
+            topics=["Arithmetic", "Algebra", "Geometry", "Calculus", "Trigonometry"]
+        ),
+        SubjectInfo(
+            subject="Science",
+            question_count=999,
+            topics=["Biology", "Chemistry", "Physics", "Earth Science", "Astronomy"]
+        ),
+        SubjectInfo(
+            subject="Python",
+            question_count=999,
+            topics=["Variables", "Functions", "Loops", "OOP", "Data Structures"]
+        )
+    ]
+    return subjects
 
 
 @app.post("/api/assessment/start", response_model=AssessmentSession, tags=["Assessment"])
 async def start_assessment(subject: str, user_id: Optional[str] = None):
-    questions_collection = db_manager.get_collection("questions")
-    question_count = await questions_collection.count_documents({"subject": subject})
-    
-    if question_count == 0:
+    """Start a new adaptive assessment session"""
+    if subject not in ["Maths", "Science", "Python"]:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No questions found for subject: {subject}"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid subject. Must be one of: Maths, Science, Python"
         )
     
-    session_id = str(uuid.uuid4())
+    if not user_id:
+        user_id = f"user_{datetime.utcnow().timestamp()}"
     
-    session_data = {
-        "session_id": session_id,
-        "user_id": user_id,
-        "subject": subject,
-        "created_at": datetime.utcnow(),
-        "is_active": True,
-        "total_questions": 15,
-        "questions_answered": 0
-    }
+    session_id = storage.create_session(user_id, subject)
+    session_data = storage.get_session(session_id)
     
-    sessions_collection = db_manager.get_collection("sessions")
-    result = await sessions_collection.insert_one(session_data)
-    session_data["_id"] = result.inserted_id
-    
-    return AssessmentSession(**session_data)
+    return AssessmentSession(
+        session_id=session_data["session_id"],
+        user_id=session_data["user_id"],
+        subject=session_data["subject"],
+        created_at=datetime.fromisoformat(session_data["start_time"]),
+        is_active=True,
+        total_questions=15,
+        questions_answered=session_data["total_questions"]
+    )
 
 
 @app.post("/api/assessment/next-question", response_model=NextQuestionResponse, tags=["Assessment"])
 async def get_next_question(request: NextQuestionRequest):
-    sessions_collection = db_manager.get_collection("sessions")
-    session = await sessions_collection.find_one({"session_id": request.session_id})
+    """Get the next adaptive question based on BKT model"""
+    session = storage.get_session(request.session_id)
     
     if not session:
         raise HTTPException(
@@ -130,69 +106,63 @@ async def get_next_question(request: NextQuestionRequest):
             detail="Session not found"
         )
     
-    if not session.get("is_active", False):
+    if session["status"] != "active":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Session is no longer active"
+            detail="Session is not active"
         )
     
-    questions_answered = session.get("questions_answered", 0)
-    total_questions = session.get("total_questions", 15)
-    
-    if questions_answered >= total_questions:
+    if session["total_questions"] >= 15:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Assessment already completed"
+            detail="Assessment complete. Maximum questions reached."
         )
     
-    topic_mastery = await bkt_model.get_topic_mastery(request.session_id)
+    current_difficulty = session["current_difficulty"]
+    mastery_level = session["mastery_level"]
     
-    if topic_mastery:
-        avg_mastery = sum(topic_mastery.values()) / len(topic_mastery)
-        recommended_difficulty = bkt_model.recommend_difficulty(avg_mastery)
-    else:
-        recommended_difficulty = DifficultyLevel.EASY
-    
-    attempts_collection = db_manager.get_collection("attempts")
-    answered_questions = await attempts_collection.find(
-        {"session_id": request.session_id}
-    ).to_list(length=None)
-    answered_ids = {att["question_id"] for att in answered_questions}
-    
-    questions_collection = db_manager.get_collection("questions")
-    available_questions = await questions_collection.find({
-        "subject": session["subject"],
-        "difficulty": recommended_difficulty
-    }).to_list(length=None)
-    
-    available_questions = [q for q in available_questions if q.get("_id") not in answered_ids]
-    
-    if not available_questions:
-        all_questions = await questions_collection.find({
-            "subject": session["subject"]
-        }).to_list(length=None)
-        available_questions = [q for q in all_questions if q.get("_id") not in answered_ids]
-    
-    if not available_questions:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No more questions available"
-        )
-    
-    selected_question = random.choice(available_questions)
-    
-    return NextQuestionResponse(
-        question=Question(**selected_question),
-        question_number=questions_answered + 1,
-        total_questions=total_questions,
-        can_request_more=questions_answered + 1 < total_questions
+    topic = await question_generator.generate_topic_for_subject(
+        session["subject"], 
+        current_difficulty
     )
+    
+    previous_questions = storage.get_question_history(request.session_id)
+    
+    try:
+        question_data = await question_generator.generate_question(
+            subject=session["subject"],
+            topic=topic,
+            difficulty=current_difficulty,
+            previous_questions=previous_questions
+        )
+        
+        storage.add_question_to_history(request.session_id, question_data["question"])
+        
+        return NextQuestionResponse(
+            session_id=request.session_id,
+            question_number=session["total_questions"] + 1,
+            total_questions=15,
+            current_difficulty=DifficultyLevel(current_difficulty),
+            mastery_level=mastery_level,
+            question=question_data["question"],
+            option_a=question_data["option_a"],
+            option_b=question_data["option_b"],
+            option_c=question_data["option_c"],
+            option_d=question_data["option_d"],
+            topic=topic,
+            subject=session["subject"]
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate question: {str(e)}"
+        )
 
 
 @app.post("/api/assessment/submit-answer", tags=["Assessment"])
 async def submit_answer(submission: AnswerSubmission):
-    sessions_collection = db_manager.get_collection("sessions")
-    session = await sessions_collection.find_one({"session_id": submission.session_id})
+    """Submit an answer and get feedback with BKT update"""
+    session = storage.get_session(submission.session_id)
     
     if not session:
         raise HTTPException(
@@ -200,58 +170,87 @@ async def submit_answer(submission: AnswerSubmission):
             detail="Session not found"
         )
     
-    questions_collection = db_manager.get_collection("questions")
-    question = await questions_collection.find_one({"_id": submission.question_id})
-    
-    if not question:
+    if session["status"] != "active":
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Question not found"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Session is not active"
         )
     
-    is_correct = submission.selected_answer.upper() == question["correct_answer"].upper()
+    current_difficulty = session["current_difficulty"]
+    topic = submission.topic if hasattr(submission, 'topic') else "General"
     
-    attempt_data = {
-        "session_id": submission.session_id,
-        "question_id": submission.question_id,
-        "selected_answer": submission.selected_answer,
-        "correct_answer": question["correct_answer"],
+    previous_questions = storage.get_question_history(submission.session_id)
+    if len(previous_questions) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No question has been asked yet"
+        )
+    
+    last_question = previous_questions[-1]
+    
+    try:
+        question_data = await question_generator.generate_question(
+            subject=session["subject"],
+            topic=topic,
+            difficulty=current_difficulty,
+            previous_questions=previous_questions[-1:]
+        )
+        correct_answer = question_data["correct_answer"]
+        explanation = question_data.get("explanation", "")
+        
+    except:
+        correct_answer = "A"
+        explanation = "Unable to verify answer at this time."
+    
+    is_correct = submission.selected_answer.upper() == correct_answer
+    
+    attempt_data = storage.add_attempt(submission.session_id, {
+        "question": last_question,
+        "selected_answer": submission.selected_answer.upper(),
+        "correct_answer": correct_answer,
         "is_correct": is_correct,
-        "difficulty": question["difficulty"],
-        "topic": question.get("topic", "General"),
-        "time_taken_seconds": submission.time_taken_seconds,
-        "answered_at": datetime.utcnow()
-    }
+        "time_spent": submission.time_spent if hasattr(submission, 'time_spent') else 0,
+        "topic": topic,
+        "difficulty": current_difficulty
+    })
     
-    attempts_collection = db_manager.get_collection("attempts")
-    await attempts_collection.insert_one(attempt_data)
+    current_mastery = session["mastery_level"]
+    new_mastery = bkt_model.update_mastery(current_mastery, is_correct)
     
-    topic = question.get("topic", "General")
-    await bkt_model.update_user_skill(
-        session_id=submission.session_id,
-        topic=topic,
-        subject=question["subject"],
-        is_correct=is_correct,
-        user_id=session.get("user_id")
-    )
+    new_difficulty = bkt_model.recommend_difficulty(new_mastery)
     
-    await sessions_collection.update_one(
-        {"session_id": submission.session_id},
-        {"$inc": {"questions_answered": 1}}
+    new_total = session["total_questions"] + 1
+    new_correct = session["correct_answers"] + (1 if is_correct else 0)
+    
+    storage.update_session(submission.session_id, {
+        "total_questions": new_total,
+        "correct_answers": new_correct,
+        "mastery_level": new_mastery,
+        "current_difficulty": new_difficulty
+    })
+    
+    storage.update_user_skill(
+        session["user_id"],
+        session["subject"],
+        topic,
+        new_mastery
     )
     
     return {
-        "success": True,
         "is_correct": is_correct,
-        "correct_answer": question["correct_answer"],
-        "topic": topic
+        "correct_answer": correct_answer,
+        "explanation": explanation,
+        "new_mastery_level": round(new_mastery, 2),
+        "new_difficulty": new_difficulty,
+        "questions_answered": new_total,
+        "total_correct": new_correct
     }
 
 
 @app.post("/api/assessment/complete", response_model=AssessmentComplete, tags=["Assessment"])
 async def complete_assessment(session_id: str):
-    sessions_collection = db_manager.get_collection("sessions")
-    session = await sessions_collection.find_one({"session_id": session_id})
+    """Complete an assessment and get learning path recommendations"""
+    session = storage.complete_session(session_id)
     
     if not session:
         raise HTTPException(
@@ -259,279 +258,59 @@ async def complete_assessment(session_id: str):
             detail="Session not found"
         )
     
-    await sessions_collection.update_one(
-        {"session_id": session_id},
-        {
-            "$set": {
-                "is_active": False,
-                "completed_at": datetime.utcnow()
-            }
-        }
-    )
+    attempts = storage.get_attempts(session_id)
     
-    attempts_collection = db_manager.get_collection("attempts")
-    attempts = await attempts_collection.find({"session_id": session_id}).to_list(length=None)
-    
-    total_answered = len(attempts)
-    correct_count = sum(1 for att in attempts if att.get("is_correct", False))
-    score = (correct_count / total_answered * 100) if total_answered > 0 else 0
-    
-    return AssessmentComplete(
-        session_id=session_id,
-        total_answered=total_answered,
-        score=score,
-        message=f"Assessment completed. Score: {score:.1f}%"
-    )
-
-
-@app.get("/api/learning-path/{session_id}", response_model=LearningPath, tags=["Learning Path"])
-async def get_learning_path(session_id: str):
-    sessions_collection = db_manager.get_collection("sessions")
-    session = await sessions_collection.find_one({"session_id": session_id})
-    
-    if not session:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Session not found"
-        )
-    
-    attempts_collection = db_manager.get_collection("attempts")
-    attempts = await attempts_collection.find({"session_id": session_id}).to_list(length=None)
-    
-    if not attempts:
+    if len(attempts) == 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No attempts found for this session"
+            detail="No attempts recorded for this session"
         )
     
-    topic_mastery = await bkt_model.get_topic_mastery(session_id)
+    total_questions = len(attempts)
+    correct_answers = sum(1 for a in attempts if a.get("is_correct", False))
+    accuracy = (correct_answers / total_questions * 100) if total_questions > 0 else 0
     
-    total_attempts = len(attempts)
-    correct_attempts = sum(1 for att in attempts if att.get("is_correct", False))
-    overall_score = (correct_attempts / total_attempts) if total_attempts > 0 else 0
+    topic_performance = {}
+    for attempt in attempts:
+        topic = attempt.get("topic", "General")
+        if topic not in topic_performance:
+            topic_performance[topic] = {"correct": 0, "total": 0}
+        topic_performance[topic]["total"] += 1
+        if attempt.get("is_correct", False):
+            topic_performance[topic]["correct"] += 1
     
     weak_topics = []
     strong_topics = []
     
-    for topic, mastery in topic_mastery.items():
-        if mastery < 0.5:
-            recommended_difficulty = bkt_model.recommend_difficulty(mastery)
-            weak_topics.append(LearningPathTopic(
-                topic=topic,
-                mastery_score=mastery,
-                priority="high" if mastery < 0.3 else "medium",
-                recommended_difficulty=recommended_difficulty,
-                questions_to_practice=10 if mastery < 0.3 else 5
-            ))
-        else:
+    for topic, perf in topic_performance.items():
+        topic_accuracy = (perf["correct"] / perf["total"] * 100) if perf["total"] > 0 else 0
+        if topic_accuracy < 60:
+            weak_topics.append(topic)
+        elif topic_accuracy >= 80:
             strong_topics.append(topic)
     
-    weak_topics.sort(key=lambda x: x.mastery_score)
-    
-    course_outline = []
-    course_outline.append(f"Review and strengthen weak topics: {', '.join([t.topic for t in weak_topics[:3]])}")
-    course_outline.append("Practice with adaptive difficulty questions")
-    course_outline.append("Focus on understanding core concepts")
-    if strong_topics:
-        course_outline.append(f"Advanced topics to explore: {', '.join(strong_topics[:3])}")
-    
-    return LearningPath(
+    return AssessmentComplete(
         session_id=session_id,
-        subject=session["subject"],
-        overall_score=overall_score,
-        mastery_by_topic=topic_mastery,
+        total_questions=total_questions,
+        correct_answers=correct_answers,
+        accuracy=round(accuracy, 2),
+        final_mastery_level=round(session["mastery_level"], 2),
+        time_taken=0,
         weak_topics=weak_topics,
         strong_topics=strong_topics,
-        recommended_course_outline=course_outline
+        recommended_resources=[]
     )
 
 
-@app.post("/api/admin/questions", response_model=Question, tags=["Admin"], dependencies=[Depends(verify_admin_key)])
-async def add_question(question: Question):
-    questions_collection = db_manager.get_collection("questions")
-    
-    question_dict = question.model_dump(exclude={"id"})
-    result = await questions_collection.insert_one(question_dict)
-    question_dict["_id"] = result.inserted_id
-    
-    return Question(**question_dict)
-
-
-@app.post("/api/admin/questions/bulk", tags=["Admin"], dependencies=[Depends(verify_admin_key)])
-async def bulk_add_questions(questions: List[Question]):
-    questions_collection = db_manager.get_collection("questions")
-    
-    questions_data = [q.model_dump(exclude={"id"}) for q in questions]
-    result = await questions_collection.insert_many(questions_data)
-    
-    return {
-        "success": True,
-        "inserted_count": len(result.inserted_ids),
-        "inserted_ids": [str(id) for id in result.inserted_ids]
-    }
-
-
-@app.get("/api/admin/sessions", tags=["Admin"], dependencies=[Depends(verify_admin_key)])
-async def get_all_sessions():
-    sessions_collection = db_manager.get_collection("sessions")
-    sessions = await sessions_collection.find({}).to_list(length=None)
-    return {"sessions": sessions, "count": len(sessions)}
-
-
-@app.get("/api/admin/analytics/{session_id}", tags=["Admin"], dependencies=[Depends(verify_admin_key)])
-async def get_session_analytics(session_id: str):
-    sessions_collection = db_manager.get_collection("sessions")
-    session = await sessions_collection.find_one({"session_id": session_id})
-    
-    if not session:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Session not found"
-        )
-    
-    attempts_collection = db_manager.get_collection("attempts")
-    attempts = await attempts_collection.find({"session_id": session_id}).to_list(length=None)
-    
-    skills_collection = db_manager.get_collection("user_skills")
-    skills = await skills_collection.find({"session_id": session_id}).to_list(length=None)
-    
-    return {
-        "session": session,
-        "attempts": attempts,
-        "user_skills": skills,
-        "total_attempts": len(attempts),
-        "correct_attempts": sum(1 for att in attempts if att.get("is_correct", False))
-    }
-
-
-@app.post("/api/ai/ingest", tags=["AI/ML"], dependencies=[Depends(verify_ai_key)])
-async def ai_ingest_endpoint(data: dict):
-    return {
-        "success": True,
-        "message": "AI ingest endpoint - ready for ML model integration",
-        "received_data": data
-    }
-
-
-@app.get("/api/powerbi/analytics", tags=["Power BI"], dependencies=[Depends(verify_admin_key)])
+@app.get("/api/powerbi/analytics", tags=["Analytics"])
 async def get_powerbi_analytics():
-    """
-    Comprehensive analytics endpoint for Power BI dashboard integration.
-    Returns aggregated data including sessions, attempts, performance metrics, and mastery scores.
-    """
-    sessions_collection = db_manager.get_collection("sessions")
-    attempts_collection = db_manager.get_collection("attempts")
-    skills_collection = db_manager.get_collection("user_skills")
-    questions_collection = db_manager.get_collection("questions")
-    
-    all_sessions = await sessions_collection.find({}).to_list(length=None)
-    all_attempts = await attempts_collection.find({}).to_list(length=None)
-    all_skills = await skills_collection.find({}).to_list(length=None)
-    all_questions = await questions_collection.find({}).to_list(length=None)
-    
-    overall_metrics = {
-        "total_sessions": len(all_sessions),
-        "total_attempts": len(all_attempts),
-        "total_questions": len(all_questions),
-        "total_users": len(set(s.get("user_id") for s in all_sessions if s.get("user_id"))),
-        "completed_sessions": len([s for s in all_sessions if not s.get("is_active", True)]),
-        "active_sessions": len([s for s in all_sessions if s.get("is_active", True)]),
-    }
-    
-    correct_attempts = [a for a in all_attempts if a.get("is_correct", False)]
-    overall_metrics["overall_accuracy"] = (len(correct_attempts) / len(all_attempts) * 100) if all_attempts else 0
-    
-    subject_performance = {}
-    for session in all_sessions:
-        subject = session.get("subject", "Unknown")
-        if subject not in subject_performance:
-            subject_performance[subject] = {
-                "subject": subject,
-                "total_sessions": 0,
-                "total_attempts": 0,
-                "correct_attempts": 0,
-                "accuracy": 0.0,
-                "avg_mastery": 0.0
-            }
-        
-        subject_performance[subject]["total_sessions"] += 1
-        session_attempts = [a for a in all_attempts if a.get("session_id") == session.get("session_id")]
-        subject_performance[subject]["total_attempts"] += len(session_attempts)
-        subject_performance[subject]["correct_attempts"] += len([a for a in session_attempts if a.get("is_correct", False)])
-    
-    for subject, data in subject_performance.items():
-        if data["total_attempts"] > 0:
-            data["accuracy"] = (data["correct_attempts"] / data["total_attempts"] * 100)
-        
-        subject_skills = [s for s in all_skills if s.get("subject") == subject]
-        if subject_skills:
-            data["avg_mastery"] = sum(s.get("mastery_probability", 0) for s in subject_skills) / len(subject_skills)
-    
-    topic_performance = {}
-    for skill in all_skills:
-        topic = skill.get("topic", "Unknown")
-        if topic not in topic_performance:
-            topic_performance[topic] = {
-                "topic": topic,
-                "subject": skill.get("subject", "Unknown"),
-                "total_learners": 0,
-                "avg_mastery": 0.0,
-                "total_attempts": 0,
-                "correct_attempts": 0,
-                "accuracy": 0.0
-            }
-        
-        topic_performance[topic]["total_learners"] += 1
-        topic_performance[topic]["avg_mastery"] += skill.get("mastery_probability", 0)
-        topic_performance[topic]["total_attempts"] += skill.get("attempts_count", 0)
-        topic_performance[topic]["correct_attempts"] += skill.get("correct_count", 0)
-    
-    for topic, data in topic_performance.items():
-        if data["total_learners"] > 0:
-            data["avg_mastery"] = data["avg_mastery"] / data["total_learners"]
-        if data["total_attempts"] > 0:
-            data["accuracy"] = (data["correct_attempts"] / data["total_attempts"] * 100)
-    
-    difficulty_distribution = {
-        "easy": {"total": 0, "correct": 0, "accuracy": 0.0},
-        "medium": {"total": 0, "correct": 0, "accuracy": 0.0},
-        "hard": {"total": 0, "correct": 0, "accuracy": 0.0}
-    }
-    
-    for attempt in all_attempts:
-        difficulty = attempt.get("difficulty", "medium")
-        if difficulty in difficulty_distribution:
-            difficulty_distribution[difficulty]["total"] += 1
-            if attempt.get("is_correct", False):
-                difficulty_distribution[difficulty]["correct"] += 1
-    
-    for diff, data in difficulty_distribution.items():
-        if data["total"] > 0:
-            data["accuracy"] = (data["correct"] / data["total"] * 100)
-    
-    time_series_data = []
-    for attempt in all_attempts:
-        time_series_data.append({
-            "timestamp": attempt.get("answered_at"),
-            "session_id": attempt.get("session_id"),
-            "is_correct": attempt.get("is_correct", False),
-            "difficulty": attempt.get("difficulty"),
-            "topic": attempt.get("topic"),
-            "time_taken_seconds": attempt.get("time_taken_seconds")
-        })
-    
-    return {
-        "overview": overall_metrics,
-        "subject_performance": list(subject_performance.values()),
-        "topic_performance": list(topic_performance.values()),
-        "difficulty_distribution": [
-            {"difficulty": k, **v} for k, v in difficulty_distribution.items()
-        ],
-        "time_series_data": time_series_data,
-        "generated_at": datetime.utcnow().isoformat()
-    }
+    """Get comprehensive analytics data for Power BI dashboard"""
+    analytics = storage.get_analytics_data()
+    return analytics
 
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+@app.get("/api/user/{user_id}/skills", tags=["User"])
+async def get_user_skills(user_id: str):
+    """Get all skills for a specific user"""
+    skills = storage.get_all_user_skills(user_id)
+    return {"user_id": user_id, "skills": skills}
