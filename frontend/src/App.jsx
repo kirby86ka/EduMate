@@ -1,45 +1,25 @@
-import { useState } from 'react'
-import SubjectSelection from './pages/SubjectSelection'
-import Assessment from './pages/Assessment'
-import Results from './pages/Results'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import Navbar from './components/Navbar'
+import Home from './pages/Home'
+import Subjects from './pages/Subjects'
+import Quiz from './pages/Quiz'
+import Dashboard from './pages/Dashboard'
+import PersonalizedPath from './pages/PersonalizedPath'
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('subjects')
-  const [selectedSubject, setSelectedSubject] = useState(null)
-  const [sessionId, setSessionId] = useState(null)
-
-  const handleSubjectSelect = (subject, session) => {
-    setSelectedSubject(subject)
-    setSessionId(session.session_id)
-    setCurrentPage('assessment')
-  }
-
-  const handleAssessmentComplete = () => {
-    setCurrentPage('results')
-  }
-
-  const handleRestart = () => {
-    setCurrentPage('subjects')
-    setSelectedSubject(null)
-    setSessionId(null)
-  }
-
   return (
-    <div className="container">
-      {currentPage === 'subjects' && (
-        <SubjectSelection onSubjectSelect={handleSubjectSelect} />
-      )}
-      {currentPage === 'assessment' && (
-        <Assessment
-          subject={selectedSubject}
-          sessionId={sessionId}
-          onComplete={handleAssessmentComplete}
-        />
-      )}
-      {currentPage === 'results' && (
-        <Results sessionId={sessionId} onRestart={handleRestart} />
-      )}
-    </div>
+    <Router>
+      <div className="min-h-screen">
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/subjects" element={<Subjects />} />
+          <Route path="/quiz/:subject" element={<Quiz />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/personalized-path" element={<PersonalizedPath />} />
+        </Routes>
+      </div>
+    </Router>
   )
 }
 

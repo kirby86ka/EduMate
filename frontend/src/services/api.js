@@ -4,6 +4,12 @@ const API_BASE_URL = window.location.hostname === 'localhost'
 
 const ADMIN_API_KEY = 'dev-admin-key-12345';
 
+const subjectMapping = {
+  'maths': 'Maths',
+  'science': 'Science',
+  'python': 'Python',
+}
+
 class ApiService {
   async getSubjects() {
     const response = await fetch(`${API_BASE_URL}/api/subjects`);
@@ -12,7 +18,8 @@ class ApiService {
   }
 
   async startAssessment(subject, userId = null) {
-    const response = await fetch(`${API_BASE_URL}/api/assessment/start?subject=${encodeURIComponent(subject)}${userId ? `&user_id=${userId}` : ''}`, {
+    const mappedSubject = subjectMapping[subject] || subject;
+    const response = await fetch(`${API_BASE_URL}/api/assessment/start?subject=${encodeURIComponent(mappedSubject)}${userId ? `&user_id=${userId}` : ''}`, {
       method: 'POST',
     });
     if (!response.ok) throw new Error('Failed to start assessment');
