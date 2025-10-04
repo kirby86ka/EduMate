@@ -32,7 +32,7 @@ An intelligent educational platform that personalizes assessments using **Bayesi
 - **Smooth Animations**: Fluid transitions and hover effects
 - **Code Splitting**: Optimized loading with React.lazy
 
-## 🏗️ Architecture
+## Architecture
 
 ### Backend
 - **Framework**: FastAPI (Python) with async/await
@@ -70,7 +70,7 @@ Recommend Next Difficulty
 Generate Learning Path
 ```
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 - Python 3.11+
@@ -133,7 +133,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 Visit `http://localhost:5000` (dev) or `http://localhost:8000` (prod)
 
-## 📚 API Documentation
+##  API Documentation
 
 ### Core Endpoints
 
@@ -216,7 +216,7 @@ GET /api/learning-path/recommendations?subject=Maths
 
 Full API documentation available at `/docs` (Swagger UI)
 
-## 🎓 Bayesian Knowledge Tracing (BKT)
+##  Bayesian Knowledge Tracing (BKT)
 
 The platform uses BKT to estimate user mastery in real-time:
 
@@ -238,13 +238,6 @@ else:
 - **30-60% mastery** → Medium questions  
 - **> 60% mastery** → Hard questions
 
-## 🎨 UI Components
-
-### Subjects
-- 🔢 **Maths**: Arithmetic, Algebra, Geometry, Calculus
-- 🔬 **Science**: Physics, Chemistry, Biology, Earth Science
-- 🐍 **Python**: Basics, Data Structures, OOP, Advanced Concepts
-
 ### Pages
 - **Home**: Welcome screen with last quiz results
 - **Subjects**: Choose quiz subject
@@ -252,9 +245,9 @@ else:
 - **Dashboard**: Analytics with subject-specific tabs
 - **Personalized Path**: AI-generated learning recommendations
 
-## 🚀 Deployment
+##  Deployment
 
-### Replit (Recommended)
+### Replit
 This project is configured for Replit's Autoscale deployment with single-port architecture:
 
 **Features:**
@@ -278,7 +271,7 @@ The `.replit` file is pre-configured with:
 - Automatic frontend build on startup
 - Backend server with proper CORS settings
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 adaptlearn/
@@ -312,7 +305,7 @@ adaptlearn/
 └── README.md                  # Project documentation
 ```
 
-## 🔧 Configuration
+##  Configuration
 
 ### Environment Variables
 ```env
@@ -330,7 +323,7 @@ AI_API_KEY=dev-ai-key-67890
 - **Frontend Question Fetch**: 20 seconds
 - **Frontend Answer Submit**: 10 seconds
 
-## 🧪 Testing
+##  Testing
 
 ```bash
 # Backend tests
@@ -341,7 +334,7 @@ cd frontend
 npm test
 ```
 
-## 🤝 Contributing
+##  Contributing
 
 Contributions are welcome! Please follow these steps:
 
@@ -356,11 +349,11 @@ Contributions are welcome! Please follow these steps:
 - **JavaScript**: ESLint configuration included
 - **Commits**: Use conventional commits format
 
-## 📄 License
+##  License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - **Google Gemini**: AI-powered question generation
 - **shadcn/ui**: Beautiful UI components
@@ -368,10 +361,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **KaTeX**: Math rendering
 - **FastAPI**: High-performance backend framework
 
-## 📧 Contact
+##  Contact
 
 For questions or support, please open an issue on GitHub.
-
----
-
-**Built with ❤️ using FastAPI, React, and AI**
