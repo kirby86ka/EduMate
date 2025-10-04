@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import { Brain } from 'lucide-react'
 import { cn } from '../lib/utils'
 
 export default function Navbar() {
@@ -11,11 +12,12 @@ export default function Navbar() {
   ]
   
   return (
-    <nav className="border-b bg-white/50 backdrop-blur-sm sticky top-0 z-50">
+    <nav className="border-b bg-black/50 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
-            <Link to="/" className="text-xl font-bold text-primary">
+            <Link to="/" className="text-xl font-bold text-primary flex items-center gap-2">
+              <Brain className="w-6 h-6" />
               AdaptLearn
             </Link>
           </div>
