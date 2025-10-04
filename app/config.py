@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     admin_api_key: str = "admin-key-change-in-production"
     ai_api_key: str = "ai-key-change-in-production"
     
-    cors_origins: list = ["http://localhost:3000"]
+    cors_origins: list = ["http://localhost:5000", "http://localhost:3000"]
 
 
 settings = Settings()
