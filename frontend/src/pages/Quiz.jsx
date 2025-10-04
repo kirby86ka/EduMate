@@ -5,6 +5,8 @@ import { Button } from '../components/ui/button'
 import api from '../services/api'
 import { CheckCircle2, XCircle } from 'lucide-react'
 
+const TOTAL_QUESTIONS = 10
+
 export default function Quiz() {
   const { subject } = useParams()
   const navigate = useNavigate()
@@ -17,6 +19,9 @@ export default function Quiz() {
   const [error, setError] = useState(null)
   const [questionsAnswered, setQuestionsAnswered] = useState(0)
   const [startTime, setStartTime] = useState(Date.now())
+  const [quizComplete, setQuizComplete] = useState(false)
+  const [results, setResults] = useState(null)
+  const [attemptHistory, setAttemptHistory] = useState([])
 
   useEffect(() => {
     const startQuiz = async () => {
@@ -37,6 +42,11 @@ export default function Quiz() {
   }, [subject])
 
   const loadNextQuestion = async () => {
+    if (questionsAnswered >= TOTAL_QUESTIONS) {
+      await completeQuiz()
+      return
+    }
+
     try {
       setLoading(true)
       setSelectedAnswer(null)
@@ -67,7 +77,28 @@ export default function Quiz() {
 
       setFeedback(response)
       setShowFeedback(true)
-      setQuestionsAnswered(prev => prev + 1)
+      
+      const newQuestionsAnswered = questionsAnswered + 1
+      setQuestionsAnswered(newQuestionsAnswered)
+      
+      setAttemptHistory(prev => [...prev, {
+        question: question.question,
+        topic: question.topic,
+        selected_answer: selectedAnswer,
+        correct_answer: response.correct_answer,
+        is_correct: response.is_correct
+      }])
+
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  const completeQuiz = async () => {
+    try {
+      const completionData = await api.completeAssessment(sessionId)
+      setResults(completionData)
+      setQuizComplete(true)
     } catch (err) {
       setError(err.message)
     }
@@ -84,6 +115,105 @@ export default function Quiz() {
             </Button>
           </CardContent>
         </Card>
+      </div>
+    )
+  }
+
+  if (quizComplete && results) {
+    const totalCorrect = attemptHistory.filter(a => a.is_correct).length
+    const percentCorrect = Math.round((totalCorrect / TOTAL_QUESTIONS) * 100)
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-8">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-4xl font-bold text-center mb-8">Quiz Complete!</h1>
+            
+            <div className="grid md:grid-cols-2 gap-6 mb-8">
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <div className="text-5xl font-bold text-primary mb-2">
+                    {totalCorrect}/{TOTAL_QUESTIONS}
+                  </div>
+                  <div className="text-muted-foreground">Results</div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <div className="text-5xl font-bold text-primary mb-2">
+                    {percentCorrect}%
+                  </div>
+                  <div className="text-muted-foreground">Percent Correct</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Question Breakdown</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {attemptHistory.map((attempt, index) => (
+                    <div 
+                      key={index}
+                      className={`p-4 rounded-lg border-2 ${
+                        attempt.is_correct 
+                          ? 'border-green-200 bg-green-50' 
+                          : 'border-red-200 bg-red-50'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        {attempt.is_correct ? (
+                          <CheckCircle2 className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
+                        ) : (
+                          <XCircle className="w-5 h-5 text-red-600 mt-1 flex-shrink-0" />
+                        )}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="font-semibold">Question {index + 1}</span>
+                            <span className="px-2 py-1 bg-white rounded text-xs font-medium">
+                              {attempt.topic}
+                            </span>
+                          </div>
+                          <p className="text-sm mb-2">{attempt.question}</p>
+                          <div className="flex gap-4 text-sm">
+                            <span>
+                              Your answer: <span className={attempt.is_correct ? 'text-green-700 font-medium' : 'text-red-700 font-medium'}>
+                                {attempt.selected_answer}
+                              </span>
+                            </span>
+                            {!attempt.is_correct && (
+                              <span>
+                                Correct: <span className="text-green-700 font-medium">
+                                  {attempt.correct_answer}
+                                </span>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="mt-8 flex gap-4 justify-center">
+              <Button onClick={() => navigate('/subjects')} size="lg">
+                Back to Subjects
+              </Button>
+              <Button 
+                onClick={() => window.location.reload()} 
+                variant="outline"
+                size="lg"
+              >
+                Retake Quiz
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
@@ -122,7 +252,7 @@ export default function Quiz() {
                 {subject}
               </span>
               <span className="px-3 py-1 bg-secondary rounded-full text-sm font-medium">
-                Question {questionsAnswered + 1}
+                Question {questionsAnswered + 1}/{TOTAL_QUESTIONS}
               </span>
               <span className="px-3 py-1 bg-accent rounded-full text-sm font-medium">
                 {question.current_difficulty}
@@ -213,7 +343,7 @@ export default function Quiz() {
                 className="w-full"
                 size="lg"
               >
-                Next Question
+                {questionsAnswered >= TOTAL_QUESTIONS ? 'View Results' : 'Next Question'}
               </Button>
             </div>
           )}
