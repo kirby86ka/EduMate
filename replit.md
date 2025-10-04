@@ -16,6 +16,8 @@ Preferred communication style: Simple, everyday language.
   - Real-time question generation based on subject, topic, and difficulty
   - Structured JSON output for consistent question format
   - Adaptive difficulty progression using BKT model
+  - 15-second timeout protection with thread pool execution
+  - Max 500 output tokens for faster response times
 - **Storage**: In-memory storage for session tracking and user progress
   - Fast performance for real-time assessments
   - Session management with UUID-based IDs
@@ -56,11 +58,12 @@ Preferred communication style: Simple, everyday language.
 - **Assessment Flow**:
   1. GET /api/subjects - Retrieve available subjects
   2. POST /api/assessment/start - Initialize session with subject
-  3. POST /api/assessment/next-question - BKT-driven question selection
-  4. POST /api/assessment/submit-answer - Process response, update mastery
+  3. POST /api/assessment/next-question - BKT-driven question selection (20s frontend timeout, 15s backend Gemini timeout)
+  4. POST /api/assessment/submit-answer - Process response, update mastery (10s frontend timeout)
   5. POST /api/assessment/complete - Finalize and get learning path
 - **Admin Routes**: Protected CRUD operations for question management
 - **AI Integration Routes**: Endpoints for AI agents to interact with system
+- **Timeout Handling**: Frontend uses AbortController for request timeouts with user-friendly error messages
 
 ### Storage Design
 - **In-Memory Storage**:

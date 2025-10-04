@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import asyncio
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from google import genai
 from google.genai import types
 from pydantic import BaseModel
@@ -41,7 +41,7 @@ class QuestionGenerator:
         subject: str, 
         topic: str, 
         difficulty: str,
-        previous_questions: List[str] = None
+        previous_questions: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """
         Generate a question using Gemini AI based on subject, topic, and difficulty.
@@ -194,7 +194,7 @@ Respond with JSON matching this exact format:
                 ],
             )
             
-            return response.text.strip()
+            return response.text.strip() if response.text else "Unable to generate recommendations at this time."
         except Exception as e:
             logger.error(f"Failed to generate recommendations: {e}")
             return "Unable to generate personalized recommendations at this time. Please try again later."
