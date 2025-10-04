@@ -11,6 +11,7 @@ class InMemoryStorage:
         self.attempts: Dict[str, List[Dict[str, Any]]] = {}
         self.user_skills: Dict[str, Dict[str, Any]] = {}
         self.question_history: Dict[str, List[str]] = {}
+        self.current_questions: Dict[str, Dict[str, Any]] = {}
     
     def create_session(self, user_id: str, subject: str) -> str:
         """Create a new assessment session"""
@@ -67,6 +68,14 @@ class InMemoryStorage:
     def get_question_history(self, session_id: str) -> List[str]:
         """Get question history for a session"""
         return self.question_history.get(session_id, [])
+    
+    def store_current_question(self, session_id: str, question_data: Dict[str, Any]):
+        """Store the current question data for validation on answer submission"""
+        self.current_questions[session_id] = question_data
+    
+    def get_current_question(self, session_id: str) -> Optional[Dict[str, Any]]:
+        """Get the current question data for a session"""
+        return self.current_questions.get(session_id)
     
     def update_user_skill(self, user_id: str, subject: str, topic: str, mastery: float):
         """Update user skill mastery level"""

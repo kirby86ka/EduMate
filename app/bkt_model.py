@@ -1,6 +1,5 @@
 from typing import Dict, Optional
-from app.models import BKTParameters, DifficultyLevel, UserSkill
-from app.database import db_manager
+from app.models import BKTParameters, DifficultyLevel
 import logging
 
 logger = logging.getLogger(__name__)
@@ -34,75 +33,14 @@ class BayesianKnowledgeTracing:
         
         return max(0.0, min(1.0, new_mastery))
     
-    def recommend_difficulty(self, mastery: float) -> DifficultyLevel:
+    def recommend_difficulty(self, mastery: float) -> str:
+        """Return difficulty level as string (easy, medium, hard) based on mastery"""
         if mastery < 0.3:
-            return DifficultyLevel.EASY
+            return "easy"
         elif mastery < 0.6:
-            return DifficultyLevel.MEDIUM
+            return "medium"
         else:
-            return DifficultyLevel.HARD
-    
-    async def update_user_skill(
-        self,
-        session_id: str,
-        topic: str,
-        subject: str,
-        is_correct: bool,
-        user_id: Optional[str] = None
-    ) -> UserSkill:
-        skills_collection = db_manager.get_collection("user_skills")
-        
-        existing_skill = await skills_collection.find_one({
-            "session_id": session_id,
-            "topic": topic
-        })
-        
-        if existing_skill:
-            current_mastery = existing_skill.get("mastery_probability", self.params.p_init)
-            new_mastery = self.update_mastery(current_mastery, is_correct)
-            
-            await skills_collection.update_one(
-                {"_id": existing_skill["_id"]},
-                {
-                    "$set": {"mastery_probability": new_mastery},
-                    "$inc": {
-                        "attempts_count": 1,
-                        "correct_count": 1 if is_correct else 0
-                    }
-                }
-            )
-            
-            existing_skill["mastery_probability"] = new_mastery
-            existing_skill["attempts_count"] = existing_skill.get("attempts_count", 0) + 1
-            existing_skill["correct_count"] = existing_skill.get("correct_count", 0) + (1 if is_correct else 0)
-            
-            return UserSkill(**existing_skill)
-        else:
-            new_mastery = self.update_mastery(self.params.p_init, is_correct)
-            skill_data = {
-                "session_id": session_id,
-                "user_id": user_id,
-                "subject": subject,
-                "topic": topic,
-                "mastery_probability": new_mastery,
-                "attempts_count": 1,
-                "correct_count": 1 if is_correct else 0
-            }
-            
-            result = await skills_collection.insert_one(skill_data)
-            skill_data["_id"] = result.inserted_id
-            
-            return UserSkill(**skill_data)
-    
-    async def get_topic_mastery(self, session_id: str) -> Dict[str, float]:
-        skills_collection = db_manager.get_collection("user_skills")
-        skills = await skills_collection.find({"session_id": session_id}).to_list(length=None)
-        
-        topic_mastery = {}
-        for skill in skills:
-            topic_mastery[skill["topic"]] = skill.get("mastery_probability", 0.5)
-        
-        return topic_mastery
+            return "hard"
 
 
 bkt_model = BayesianKnowledgeTracing()
