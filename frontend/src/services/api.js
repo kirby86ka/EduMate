@@ -68,6 +68,13 @@ class ApiService {
     if (!response.ok) throw new Error('Failed to get learning path');
     return response.json();
   }
+
+  async getSubjectAnalytics(subject) {
+    const mappedSubject = subjectMapping[subject] || subject;
+    const response = await fetch(`${API_BASE_URL}/api/analytics/subject/${encodeURIComponent(mappedSubject)}`);
+    if (!response.ok) throw new Error('Failed to get analytics');
+    return response.json();
+  }
 }
 
 export default new ApiService();

@@ -300,6 +300,72 @@ async def get_powerbi_analytics():
     return analytics
 
 
+@app.get("/api/analytics/subject/{subject}", tags=["Analytics"])
+async def get_subject_analytics(subject: str):
+    """Get analytics data for a specific subject"""
+    if subject not in ["Maths", "Science", "Python"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid subject"
+        )
+    
+    subject_sessions = [s for s in storage.sessions.values() if s["subject"] == subject]
+    
+    if not subject_sessions:
+        return {
+            "subject": subject,
+            "mastery_estimate": 0.0,
+            "growth_data": [],
+            "question_history": [],
+            "total_questions": 0,
+            "correct_answers": 0,
+            "accuracy": 0.0
+        }
+    
+    growth_data = []
+    all_attempts = []
+    total_correct = 0
+    total_questions = 0
+    
+    for session in subject_sessions:
+        session_attempts = storage.get_attempts(session["session_id"])
+        
+        for idx, attempt in enumerate(session_attempts, 1):
+            if attempt.get("is_correct"):
+                total_correct += 1
+            total_questions += 1
+            
+            growth_data.append({
+                "question_number": total_questions,
+                "correct": total_correct,
+                "accuracy": round((total_correct / total_questions) * 100, 1)
+            })
+            
+            all_attempts.append({
+                "question": attempt.get("question", ""),
+                "topic": attempt.get("topic", "General"),
+                "is_correct": attempt.get("is_correct", False),
+                "difficulty": attempt.get("difficulty", "easy"),
+                "timestamp": attempt.get("timestamp", "")
+            })
+    
+    subject_skills = [s for s in storage.user_skills.values() if s["subject"] == subject]
+    avg_mastery = sum(s["mastery_level"] for s in subject_skills) / len(subject_skills) if subject_skills else 0.0
+    
+    if not subject_skills and subject_sessions:
+        avg_mastery = subject_sessions[-1].get("mastery_level", 0.0)
+    
+    return {
+        "subject": subject,
+        "mastery_estimate": round(avg_mastery, 3),
+        "growth_data": growth_data,
+        "question_history": all_attempts[-20:],
+        "total_questions": total_questions,
+        "correct_answers": total_correct,
+        "accuracy": round((total_correct / total_questions * 100) if total_questions > 0 else 0, 1)
+    }
+
+
 @app.get("/api/user/{user_id}/skills", tags=["User"])
 async def get_user_skills(user_id: str):
     """Get all skills for a specific user"""
