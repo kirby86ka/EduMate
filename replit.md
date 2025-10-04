@@ -122,8 +122,24 @@ Preferred communication style: Simple, everyday language.
   - Background: Pure black (#000000)
   - Foreground text: White (#FFFFFF)
   - Muted text: Gray (#A1A1AA)
+  - Logo: Bright yellow (#F5C211) with pulsing brain icon
   - Accent colors: Purple primary, green/red for correctness indicators
   - Consistent use of `bg-background`, `text-foreground`, `border-border` classes
+- **Animations & Transitions**: Smooth CSS animations throughout the site
+  - Keyframe animations: fadeIn, slideUp, slideIn, scaleIn with staggered delays
+  - Hover effects: lift animation on cards, scale on buttons, rotate on icons
+  - Navigation: active link underline animation with yellow highlight
+  - Transition utilities: smooth easing with cubic-bezier curves
+- **Responsive Design**: Mobile-first approach with Tailwind breakpoints
+  - xs (extra small): < 640px - Mobile phones
+  - sm (small): 640px+ - Large phones, small tablets
+  - md (medium): 768px+ - Tablets, small laptops
+  - Responsive text sizes, spacing, and grid layouts across all pages
+- **Performance Optimizations**:
+  - React.lazy for route-level code splitting
+  - Suspense with branded loading fallback
+  - React.memo for component memoization
+  - Optimized re-renders and bundle sizes
 - **Pages**:
   - **Home**: Welcome page with three action cards (Adaptive Learning, Skill Mastery, Personalized Path)
     - Brain icon in navigation header next to AdaptLearn logo
