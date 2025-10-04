@@ -118,17 +118,40 @@ Respond with JSON matching this exact format:
                 logger.info(f"Response object type: {type(response)}")
                 logger.info(f"Response has text attr: {hasattr(response, 'text')}")
                 
+                # Check candidates first for safety filters or blocks
+                if hasattr(response, 'candidates') and response.candidates:
+                    logger.info(f"Response has {len(response.candidates)} candidates")
+                    for i, candidate in enumerate(response.candidates):
+                        logger.info(f"Candidate {i} finish_reason: {getattr(candidate, 'finish_reason', 'N/A')}")
+                        if hasattr(candidate, 'safety_ratings'):
+                            logger.info(f"Candidate {i} safety_ratings: {candidate.safety_ratings}")
+                        if hasattr(candidate, 'content'):
+                            logger.info(f"Candidate {i} has content: {bool(candidate.content)}")
+                
+                # Check prompt_feedback for blocks
+                if hasattr(response, 'prompt_feedback'):
+                    logger.info(f"Prompt feedback: {response.prompt_feedback}")
+                
                 raw_json = response.text if hasattr(response, 'text') and response.text else None
                 
                 if not raw_json:
                     logger.error(f"Empty or no response.text from Gemini for {subject}/{topic}/{difficulty}")
-                    logger.error(f"Response attributes: {dir(response)}")
-                    # Check if there are candidates with content
+                    
+                    # Try to extract from candidates directly
                     if hasattr(response, 'candidates') and response.candidates:
-                        logger.info(f"Response has {len(response.candidates)} candidates")
-                        for i, candidate in enumerate(response.candidates):
-                            logger.info(f"Candidate {i}: {candidate}")
-                    raise ValueError("Empty response from Gemini - response.text is None or empty")
+                        for candidate in response.candidates:
+                            if hasattr(candidate, 'content') and candidate.content:
+                                if hasattr(candidate.content, 'parts') and candidate.content.parts:
+                                    for part in candidate.content.parts:
+                                        if hasattr(part, 'text') and part.text:
+                                            raw_json = part.text
+                                            logger.info(f"Extracted text from candidate.content.parts: {raw_json[:100]}...")
+                                            break
+                            if raw_json:
+                                break
+                    
+                    if not raw_json:
+                        raise ValueError("Empty response from Gemini - response.text is None or empty")
                 
                 logger.info(f"Generated question JSON: {raw_json}")
             except asyncio.TimeoutError:
